@@ -1,115 +1,107 @@
-# ValidX Stripe Quick Start
+# ValidX — Marketing Site + PWA
 
-Get paid for experiments in under 15 minutes. This guide walks you through creating a Stripe account, generating payment links for your three tiers, and managing payments.
+The Uber-style marketplace that connects startups and small businesses to real testers. Launch micro-experiments, get market signals in days.
 
----
+## What's in here
 
-## Step 1 — Create Your Stripe Account
-
-1. Go to **https://dashboard.stripe.com/register**
-2. Enter your email, full name, and a password
-3. Verify your email address
-4. You'll land on the Stripe Dashboard in **test mode** (orange "Test mode" banner)
-
-> You can accept real payments later by activating your account under **Settings > Account details**. For now, test mode lets you try everything with fake card numbers.
-
----
-
-## Step 2 — Get Your API Keys
-
-1. In the Stripe Dashboard, click **Developers** (top-right) or go to https://dashboard.stripe.com/test/apikeys
-2. You'll see two keys:
-   - **Publishable key** — starts with `pk_test_...` (used in frontend, safe to expose)
-   - **Secret key** — starts with `sk_test_...` (used in backend, keep private)
-3. Copy your **Secret key** — you'll need it in the next step
-
----
-
-## Step 3 — Run the Setup Script
-
-The setup script creates your three ValidX products and payment links automatically.
-
-```bash
-# 1. Install Stripe SDK
-npm install stripe
-
-# 2. Run the setup script with your secret key
-node setup-stripe.js sk_test_YOUR_KEY_HERE
+```
+validx-site/
+├── index.html        Marketing homepage (hero, pricing, CTA)
+├── app.html          The full PWA — business + tester flows
+├── offline.html      Offline fallback page served by the SW
+├── manifest.json     PWA manifest (icons, shortcuts, theme)
+├── sw.js             Service worker (network-first pages, cache-first assets)
+├── robots.txt        Crawler rules
+├── sitemap.xml       Sitemap for indexing
+├── netlify.toml      Netlify deployment config
+├── vercel.json       Vercel deployment config
+└── icons/
+    ├── favicon.ico
+    ├── favicon-16.png, favicon-32.png
+    ├── apple-touch-icon.png      180x180
+    ├── icon-192.png, icon-256.png, icon-384.png, icon-512.png
+    └── icon-maskable-512.png     Android adaptive icon
 ```
 
-This creates:
-| Product | Price | What it does |
-|---------|-------|-------------|
-| Quick Test | $29 | 10 testers, 48hr turnaround |
-| Deep Dive | $89 | 25 testers, focus groups |
-| Full Study | $250 | 50 testers, full analysis |
+There is no build step. Everything is plain HTML/CSS/JS — the app uses React + Babel loaded from a CDN and compiles JSX in the browser.
 
-The script prints your three payment links. Share them anywhere — email, website, social media. Customers click, pay, done.
+## Local development
 
----
+Because service workers and the manifest require a real HTTP origin (not `file://`), serve the folder over HTTP:
 
-## Step 4 — Set Up Webhooks (So You Know When Someone Pays)
+```sh
+# Option 1 — Python (no install)
+cd validx-site
+python3 -m http.server 8080
 
-1. In the Stripe Dashboard, go to **Developers > Webhooks**
-2. Click **Add endpoint**
-3. Set the URL to: `https://YOUR-DOMAIN.com/api/stripe/webhook`
-4. Select these events:
-   - `checkout.session.completed`
-   - `payment_intent.succeeded`
-   - `charge.refunded`
-5. Click **Add endpoint**
-6. Copy the **Signing secret** (starts with `whsec_...`)
-7. Add both keys to your `.env`:
-   ```
-   STRIPE_SECRET_KEY=sk_test_YOUR_KEY
-   STRIPE_WEBHOOK_SECRET=whsec_YOUR_SECRET
-   ```
+# Option 2 — Node
+npx serve -p 8080
 
----
+# Then open http://localhost:8080
+```
 
-## Step 5 — Go Live
+Then visit:
 
-When you're ready for real payments:
+- http://localhost:8080/            — marketing site
+- http://localhost:8080/app.html    — the PWA
 
-1. Go to **Settings > Account details** in Stripe Dashboard
-2. Complete business verification (name, address, bank account)
-3. Stripe will review and activate your account
-4. Switch your API keys from `sk_test_...` to `sk_live_...`
-5. Run the setup script again with your live key to create real payment links
-6. Update your webhook endpoint with the live signing secret
+## Deploying
 
----
+### Netlify (easiest)
+1. Drag-and-drop the `validx-site` folder to https://app.netlify.com/drop
+2. Or connect a Git repo — `netlify.toml` is already configured.
 
-## Test Card Numbers
+### Vercel
+1. Run `vercel` from inside the folder, or
+2. Import the repo on vercel.com — `vercel.json` is already configured.
 
-While in test mode, use these fake cards:
+### GitHub Pages
+1. Push the folder to a repo.
+2. Settings → Pages → deploy from branch → `main` / root.
+3. Note: the service worker scope needs to be at the root of the repo, so either use a user/org page (`username.github.io`) or put the files at the root of the repo.
 
-| Card Number | Result |
-|------------|--------|
-| `4242 4242 4242 4242` | Successful payment |
-| `4000 0000 0000 3220` | 3D Secure required |
-| `4000 0000 0000 0002` | Card declined |
+### Cloudflare Pages
+1. Connect the repo, set the build output directory to `.`, no build command needed.
 
-Use any future expiry date, any 3-digit CVC, and any ZIP code.
+## Hooking up a custom domain (validx.com)
 
----
+1. Buy `validx.com` from any registrar (Namecheap, Cloudflare, Porkbun, etc.).
+2. In your host's dashboard (Netlify/Vercel/etc.) add the custom domain.
+3. Update DNS to the host's CNAME/A records (your provider will walk you through this).
+4. HTTPS is automatic on all the hosts above.
 
-## Files in This Package
+Then update the absolute URLs in:
+- `sitemap.xml` (currently `https://validx.com/...`)
+- `robots.txt` (sitemap link)
+- The `og:url` meta in `index.html`
 
-| File | Purpose |
-|------|---------|
-| `setup-stripe.js` | Creates products, prices, and payment links |
-| `stripe-routes.js` | Express routes — webhook handler + payment API |
-| `payment-dashboard.html` | Visual dashboard to manage payments and copy links |
-| `.env.example` | Environment variables template |
-| `README.md` | This guide |
+## PWA install flow
 
----
+Once deployed over HTTPS:
 
-## Quick Reference
+- **iOS Safari**: Share → "Add to Home Screen"
+- **Android Chrome**: The install banner appears automatically. Users can also use ⋮ → "Install app"
+- **Desktop Chrome/Edge**: An install icon appears in the address bar
 
-- **Stripe Dashboard**: https://dashboard.stripe.com
-- **Payment Links**: https://dashboard.stripe.com/payment-links
-- **Webhooks**: https://dashboard.stripe.com/webhooks
-- **Test Cards**: https://docs.stripe.com/testing#cards
-- **API Docs**: https://docs.stripe.com/api
+The manifest ships with three shortcuts (Create Experiment, Browse, Earnings) that appear when you long-press the installed icon on Android.
+
+## Next steps for launch
+
+- [ ] **Wire up real payments** — Stripe Checkout for business payments, PayPal Payouts API for tester cashouts. The UI is already in place in `app.html`.
+- [ ] **Add a backend** — right now all state lives in `localStorage`. For real users you'll want Supabase or Firebase (auth + a Postgres/Firestore DB + storage for uploaded files).
+- [ ] **Auth** — add magic-link / Google / Apple sign-in so users can sync across devices.
+- [ ] **Analytics** — add Plausible or GA4 to `index.html` to track conversion.
+- [ ] **Transactional email** — Resend or Postmark for experiment notifications and payout confirmations.
+- [ ] **Legal pages** — Terms of Service, Privacy Policy (required before accepting payments and for App Store / Play Store submission).
+
+## Tech stack
+
+- HTML5 + CSS (custom, no framework) for the marketing site
+- React 18 via CDN + in-browser Babel for the app (single-file, no build)
+- Service worker with a network-first strategy for pages and cache-first for assets
+- LocalStorage for client-side persistence
+- Web Manifest with shortcuts, maskable icon, and portrait lock
+
+## License
+
+© 2026 ValidX. All rights reserved.

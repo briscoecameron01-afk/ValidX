@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ValidX — Test Your Riskiest Assumptions in Real Time</title>
+<meta name="description" content="ValidX is the Uber-style marketplace that connects startups and small businesses to real testers. Launch micro-experiments and get market signals in days, starting at $29.">
+<meta name="theme-color" content="#0F172A">
+<meta name="color-scheme" content="dark">
+
+<!-- PWA -->
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icons/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="./icons/favicon-16.png">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ValidX">
+<meta name="mobile-web-app-capable" content="yes">
+
+<!-- Open Graph / Twitter -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="ValidX — Test Your Riskiest Assumptions in Real Time">
+<meta property="og:description" content="The Uber-style marketplace that connects startups to real testers. Launch validation experiments starting at $29.">
+<meta property="og:image" content="./icons/icon-512.png">
+<meta property="og:url" content="https://validx.com/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="ValidX — Test Your Riskiest Assumptions">
+<meta name="twitter:description" content="Launch validation experiments and get real market signals from real testers.">
+<meta name="twitter:image" content="./icons/icon-512.png">
+
+<!-- Preconnect for faster CDN loads on app launch -->
+<link rel="preconnect" href="https://unpkg.com">
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<style>
+/* ── Reset & Base ───────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --dark:#0F172A;--dark2:#1E293B;--dark3:#334155;
+  --indigo:#6366F1;--indigo-lt:#818CF8;--indigo-dk:#4F46E5;
+  --cyan:#06B6D4;--cyan-lt:#22D3EE;--cyan-dk:#0891B2;
+  --light:#F1F5F9;--white:#FFFFFF;
+  --text:#CBD5E1;--text-med:#94A3B8;--text-dark:#1E293B;
+  --radius:12px;--radius-sm:8px;
+}
+html{scroll-behavior:smooth;font-size:16px}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--dark);color:var(--text);line-height:1.6;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+img{max-width:100%;display:block}
+.container{max-width:1140px;margin:0 auto;padding:0 24px}
+
+/* ── Navigation ─────────────────────────────────── */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:16px 0;transition:background .3s,box-shadow .3s}
+nav.scrolled{background:rgba(15,23,42,.95);backdrop-filter:blur(12px);box-shadow:0 1px 0 rgba(99,102,241,.15)}
+nav .container{display:flex;align-items:center;justify-content:space-between}
+.logo{font-size:1.5rem;font-weight:800;letter-spacing:-0.5px}
+.logo span{color:var(--cyan)}
+.nav-links{display:flex;gap:32px;align-items:center}
+.nav-links a{font-size:.9rem;color:var(--text-med);transition:color .2s;font-weight:500}
+.nav-links a:hover{color:var(--white)}
+.nav-links a.active{color:var(--white)}
+.btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 24px;border-radius:var(--radius-sm);font-weight:600;font-size:.9rem;transition:all .25s;cursor:pointer;border:none}
+.btn-primary{background:var(--indigo);color:var(--white)}
+.btn-primary:hover{background:var(--indigo-dk);transform:translateY(-1px);box-shadow:0 4px 20px rgba(99,102,241,.4)}
+.btn-outline{border:1.5px solid var(--dark3);color:var(--text);background:transparent}
+.btn-outline:hover{border-color:var(--indigo);color:var(--white)}
+.btn-lg{padding:14px 32px;font-size:1rem;border-radius:var(--radius)}
+.btn-cyan{background:var(--cyan);color:var(--dark)}
+.btn-cyan:hover{background:var(--cyan-lt);transform:translateY(-1px);box-shadow:0 4px 20px rgba(6,182,212,.4)}
+
+/* Mobile menu */
+.menu-toggle{display:none;background:none;border:none;color:var(--white);font-size:1.5rem;cursor:pointer}
+
+/* ── Hero ───────────────────────────────────────── */
+.hero{padding:160px 0 100px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-200px;right:-200px;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(99,102,241,.12) 0%,transparent 70%);pointer-events:none}
+.hero::after{content:'';position:absolute;bottom:-100px;left:-100px;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(6,182,212,.08) 0%,transparent 70%);pointer-events:none}
+.hero-content{position:relative;z-index:1;max-width:680px}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border-radius:20px;background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.25);color:var(--indigo-lt);font-size:.82rem;font-weight:600;margin-bottom:24px}
+.hero-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.hero h1{font-size:3.5rem;font-weight:800;line-height:1.1;color:var(--white);letter-spacing:-1.5px;margin-bottom:20px}
+.hero h1 .highlight{background:linear-gradient(135deg,var(--cyan),var(--indigo-lt));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{font-size:1.2rem;color:var(--text-med);max-width:540px;margin-bottom:32px;line-height:1.7}
+.hero-actions{display:flex;gap:16px;flex-wrap:wrap}
+.hero-stats{display:flex;gap:48px;margin-top:64px;padding-top:40px;border-top:1px solid rgba(51,65,85,.5)}
+.hero-stat .num{font-size:2rem;font-weight:800;color:var(--white)}
+.hero-stat .num span{color:var(--cyan)}
+.hero-stat .label{font-size:.85rem;color:var(--text-med);margin-top:4px}
+
+/* ── Section commons ────────────────────────────── */
+section{padding:100px 0}
+.section-label{font-size:.82rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--cyan);margin-bottom:12px}
+.section-title{font-size:2.5rem;font-weight:800;color:var(--white);letter-spacing:-1px;line-height:1.15;margin-bottom:16px}
+.section-subtitle{font-size:1.1rem;color:var(--text-med);max-width:560px;line-height:1.7}
+.section-header{margin-bottom:60px}
+.bg-dark2{background:var(--dark2)}
+.bg-light{background:var(--light)}
+.bg-light .section-title{color:var(--text-dark)}
+.bg-light .section-label{color:var(--indigo)}
+.bg-light .section-subtitle{color:#64748B}
+
+/* ── Problem Section ────────────────────────────── */
+.problem-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.problem-card{background:var(--dark);border:1px solid rgba(51,65,85,.5);border-radius:var(--radius);padding:36px 28px;position:relative;overflow:hidden;transition:border-color .3s}
+.problem-card:hover{border-color:var(--indigo)}
+.problem-card .stat{font-size:3rem;font-weight:800;color:var(--indigo-lt);margin-bottom:8px}
+.problem-card .stat-label{font-size:1rem;color:var(--text);line-height:1.5}
+
+/* ── How It Works ───────────────────────────────── */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;position:relative}
+.steps::before{content:'';position:absolute;top:44px;left:16.67%;right:16.67%;height:2px;background:linear-gradient(90deg,var(--indigo),var(--cyan));opacity:.3}
+.step{text-align:center;position:relative}
+.step-num{width:88px;height:88px;border-radius:50%;background:linear-gradient(135deg,var(--indigo),var(--cyan-dk));display:flex;align-items:center;justify-content:center;font-size:1.8rem;font-weight:800;color:var(--white);margin:0 auto 24px;position:relative;z-index:1}
+.step h3{font-size:1.2rem;font-weight:700;color:var(--white);margin-bottom:10px}
+.step p{font-size:.95rem;color:var(--text-med);max-width:280px;margin:0 auto;line-height:1.6}
+
+/* ── Features ───────────────────────────────────── */
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.feature-card{background:var(--dark2);border:1px solid rgba(51,65,85,.4);border-radius:var(--radius);padding:32px 24px;transition:all .3s}
+.feature-card:hover{border-color:var(--indigo);transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,.3)}
+.feature-icon{width:48px;height:48px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin-bottom:20px}
+.feature-icon.indigo{background:rgba(99,102,241,.15);color:var(--indigo-lt)}
+.feature-icon.cyan{background:rgba(6,182,212,.15);color:var(--cyan)}
+.feature-card h3{font-size:1.05rem;font-weight:700;color:var(--white);margin-bottom:10px}
+.feature-card p{font-size:.9rem;color:var(--text-med);line-height:1.6}
+
+/* ── Audience / Who It's For ────────────────────── */
+.audience-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px}
+.audience-card{background:var(--white);border-radius:var(--radius);padding:36px 32px;position:relative;overflow:hidden;transition:transform .3s,box-shadow .3s}
+.audience-card:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,.08)}
+.audience-card::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;background:var(--indigo)}
+.audience-card:nth-child(2)::before{background:var(--cyan)}
+.audience-card:nth-child(3)::before{background:var(--cyan)}
+.audience-card:nth-child(4)::before{background:var(--indigo)}
+.audience-badge{display:inline-block;padding:4px 12px;border-radius:4px;background:var(--indigo);color:var(--white);font-size:.75rem;font-weight:700;margin-bottom:14px}
+.audience-card:nth-child(2) .audience-badge,.audience-card:nth-child(3) .audience-badge{background:var(--cyan-dk)}
+.audience-card h3{font-size:1.15rem;font-weight:700;color:var(--text-dark);margin-bottom:8px}
+.audience-card p{font-size:.92rem;color:#64748B;line-height:1.6}
+
+/* ── Use Cases ──────────────────────────────────── */
+.usecases-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.usecase-card{background:var(--dark);border:1px solid rgba(51,65,85,.4);border-radius:var(--radius);padding:28px 24px;border-top:3px solid var(--cyan);transition:all .3s}
+.usecase-card:nth-child(even){border-top-color:var(--indigo)}
+.usecase-card:hover{border-color:rgba(99,102,241,.4);transform:translateY(-3px)}
+.usecase-card h3{font-size:1.05rem;font-weight:700;color:var(--white);margin-bottom:8px}
+.usecase-card p{font-size:.88rem;color:var(--text-med);line-height:1.6}
+
+/* ── Pricing ────────────────────────────────────── */
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;align-items:start}
+.price-card{background:var(--dark);border:1px solid rgba(51,65,85,.5);border-radius:var(--radius);padding:36px 28px;transition:all .3s;position:relative}
+.price-card:hover{border-color:var(--indigo);transform:translateY(-4px)}
+.price-card.featured{background:linear-gradient(135deg,var(--indigo-dk),var(--indigo));border-color:var(--indigo);transform:scale(1.04)}
+.price-card.featured:hover{transform:scale(1.06)}
+.price-badge{position:absolute;top:-14px;left:50%;transform:translateX(-50%);padding:5px 18px;border-radius:20px;background:var(--cyan);color:var(--dark);font-size:.75rem;font-weight:700;white-space:nowrap}
+.price-name{font-size:1.15rem;font-weight:700;color:var(--white);margin-bottom:8px}
+.price-amount{font-size:2.8rem;font-weight:800;color:var(--white);line-height:1}
+.price-amount span{font-size:1rem;font-weight:500;color:var(--text-med)}
+.price-period{font-size:.88rem;color:var(--text-med);margin-top:4px;margin-bottom:24px}
+.price-features{list-style:none;display:flex;flex-direction:column;gap:14px;margin-bottom:28px}
+.price-features li{font-size:.92rem;color:var(--text);display:flex;align-items:flex-start;gap:10px}
+.price-features li::before{content:'✓';color:var(--cyan);font-weight:700;flex-shrink:0}
+.price-card.featured .price-features li::before{color:var(--cyan-lt)}
+
+/* ── Marketplace Explainer ──────────────────────── */
+.marketplace{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
+.marketplace-visual{position:relative;height:360px}
+.mp-circle{position:absolute;border-radius:50%;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:700;font-size:.9rem}
+.mp-circle.center{width:140px;height:140px;background:linear-gradient(135deg,var(--indigo),var(--cyan-dk));top:50%;left:50%;transform:translate(-50%,-50%);color:var(--white);font-size:1.1rem;z-index:2;box-shadow:0 8px 32px rgba(99,102,241,.3)}
+.mp-circle.left{width:110px;height:110px;background:var(--dark);border:2px solid var(--indigo);top:50%;left:5%;transform:translateY(-50%);color:var(--indigo-lt);font-size:.85rem}
+.mp-circle.right{width:110px;height:110px;background:var(--dark);border:2px solid var(--cyan);top:50%;right:5%;transform:translateY(-50%);color:var(--cyan);font-size:.85rem}
+.mp-line{position:absolute;top:50%;height:2px;background:linear-gradient(90deg,var(--indigo),var(--cyan));opacity:.3}
+.mp-line.l{left:18%;width:26%}
+.mp-line.r{right:18%;width:26%}
+.marketplace-content h3{font-size:1.8rem;font-weight:800;color:var(--white);margin-bottom:16px;line-height:1.2}
+.marketplace-content p{font-size:1rem;color:var(--text-med);line-height:1.7;margin-bottom:16px}
+
+/* ── CTA / Contact ──────────────────────────────── */
+.cta-section{text-align:center;padding:120px 0;position:relative;overflow:hidden}
+.cta-section::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(99,102,241,.08) 0%,transparent 60%);pointer-events:none}
+.cta-section h2{font-size:3rem;font-weight:800;color:var(--white);letter-spacing:-1px;margin-bottom:16px}
+.cta-section p{font-size:1.15rem;color:var(--text-med);margin-bottom:36px}
+.cta-actions{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:40px}
+.contact-row{display:flex;justify-content:center;gap:48px;margin-top:24px}
+.contact-item{font-size:.95rem;color:var(--text-med)}
+.contact-item span{color:var(--white);font-weight:600}
+
+/* ── Footer ─────────────────────────────────────── */
+footer{border-top:1px solid rgba(51,65,85,.4);padding:40px 0;text-align:center}
+footer .container{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+footer .logo{font-size:1.2rem}
+footer p{font-size:.85rem;color:var(--text-med)}
+footer .footer-links{display:flex;gap:24px}
+footer .footer-links a{font-size:.85rem;color:var(--text-med);transition:color .2s}
+footer .footer-links a:hover{color:var(--white)}
+
+/* ── Animations ─────────────────────────────────── */
+.fade-up{opacity:0;transform:translateY(30px);transition:opacity .6s ease,transform .6s ease}
+.fade-up.visible{opacity:1;transform:translateY(0)}
+
+/* ── Responsive ─────────────────────────────────── */
+@media(max-width:900px){
+  .hero h1{font-size:2.5rem}
+  .problem-grid,.features-grid,.usecases-grid,.pricing-grid,.steps{grid-template-columns:1fr}
+  .audience-grid{grid-template-columns:1fr}
+  .marketplace{grid-template-columns:1fr}
+  .marketplace-visual{height:240px}
+  .hero-stats{flex-direction:column;gap:20px}
+  .steps::before{display:none}
+  .nav-links{display:none;position:absolute;top:60px;left:0;right:0;background:rgba(15,23,42,.98);flex-direction:column;padding:24px;gap:20px;border-bottom:1px solid var(--dark3)}
+  .nav-links.open{display:flex}
+  .menu-toggle{display:block}
+  .contact-row{flex-direction:column;gap:16px}
+}
+@media(max-width:600px){
+  .hero h1{font-size:2rem}
+  .section-title{font-size:1.8rem}
+  .hero{padding:120px 0 60px}
+  section{padding:60px 0}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ Navigation ═══ -->
+<nav id="navbar">
+  <div class="container">
+    <a href="#home" class="logo">Valid<span>X</span></a>
+    <button class="menu-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="Menu">&#9776;</button>
+    <div class="nav-links">
+      <a href="#home" class="active">Home</a>
+      <a href="#how-it-works">How It Works</a>
+      <a href="#features">Features</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#contact" class="btn btn-primary">Get Started</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══ Hero ═══ -->
+<section class="hero" id="home">
+  <div class="container">
+    <div class="hero-content fade-up">
+      <div class="hero-badge"><span class="dot"></span> Now accepting early access signups</div>
+      <h1>Test Your Riskiest Assumptions <span class="highlight">In Real Time.</span></h1>
+      <p>ValidX is the Uber-style marketplace that connects startups and small businesses to the next generation of consumers and producers. Launch micro-experiments and get real market signals — starting at just $29.</p>
+      <div class="hero-actions">
+        <a href="./app.html" class="btn btn-primary btn-lg">Launch App</a>
+        <a href="#how-it-works" class="btn btn-outline btn-lg">See How It Works</a>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <div class="num">$29<span> / test</span></div>
+          <div class="label">Starting price</div>
+        </div>
+        <div class="hero-stat">
+          <div class="num"><span>&#60; </span>3 days</div>
+          <div class="label">Average turnaround</div>
+        </div>
+        <div class="hero-stat">
+          <div class="num">50<span>+</span></div>
+          <div class="label">People reached per tester</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Problem ═══ -->
+<section class="bg-dark2" id="problem">
+  <div class="container">
+    <div class="section-header fade-up">
+      <div class="section-label">The Problem</div>
+      <h2 class="section-title">Most Startups Build First, Validate Later.</h2>
+      <p class="section-subtitle">Billions are wasted every year on products nobody wants. Founders rely on gut instinct instead of real market data — and pay the price.</p>
+    </div>
+    <div class="problem-grid">
+      <div class="problem-card fade-up">
+        <div class="stat">90%</div>
+        <div class="stat-label">of startups fail within the first five years — most because they never validated demand.</div>
+      </div>
+      <div class="problem-card fade-up">
+        <div class="stat">42%</div>
+        <div class="stat-label">build a product that no one actually wants — the #1 reason startups die.</div>
+      </div>
+      <div class="problem-card fade-up">
+        <div class="stat">$29B+</div>
+        <div class="stat-label">wasted annually on ideas that were never tested with real consumers before launch.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Marketplace Explainer ═══ -->
+<section id="marketplace">
+  <div class="container">
+    <div class="marketplace fade-up">
+      <div class="marketplace-visual">
+        <div class="mp-line l"></div>
+        <div class="mp-line r"></div>
+        <div class="mp-circle left">Startups &<br>Businesses</div>
+        <div class="mp-circle center">ValidX<br>Platform</div>
+        <div class="mp-circle right">College<br>Student<br>Testers</div>
+      </div>
+      <div class="marketplace-content">
+        <div class="section-label">The Marketplace</div>
+        <h3>Like Uber — But for Market Validation.</h3>
+        <p>ValidX is a two-sided marketplace. On one side, startups post experiments they need tested. On the other, college students across the country pick up those tests and provide real-world feedback.</p>
+        <p>Our testers are digital natives — the next generation of consumers and producers. Their insights are forward-looking, relevant, and fast. You decide how many testers run your experiment; each tester reaches a network of real people.</p>
+        <a href="#how-it-works" class="btn btn-outline">Learn how it works &rarr;</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ How It Works ═══ -->
+<section class="bg-dark2" id="how-it-works">
+  <div class="container">
+    <div class="section-header" style="text-align:center">
+      <div class="section-label fade-up">How It Works</div>
+      <h2 class="section-title fade-up">Three Steps to Validation.</h2>
+      <p class="section-subtitle fade-up" style="margin:0 auto">Go from untested assumption to actionable insight in days — not months.</p>
+    </div>
+    <div class="steps">
+      <div class="step fade-up">
+        <div class="step-num">1</div>
+        <h3>Define Your Assumption</h3>
+        <p>Identify the riskiest assumption in your business model. Frame it as a testable hypothesis — we'll help you get it right.</p>
+      </div>
+      <div class="step fade-up">
+        <div class="step-num">2</div>
+        <h3>Launch a Micro-Experiment</h3>
+        <p>Design a quick, targeted test — ad campaigns, landing pages, prototype demos — and deploy it to our college student tester community.</p>
+      </div>
+      <div class="step fade-up">
+        <div class="step-num">3</div>
+        <h3>Get Real Market Data</h3>
+        <p>Receive actionable feedback, engagement metrics, and a clear pass/fail signal. Know whether to pivot, persevere, or double down.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Features ═══ -->
+<section id="features">
+  <div class="container">
+    <div class="section-header fade-up">
+      <div class="section-label">Platform Features</div>
+      <h2 class="section-title">Built for Speed and Clarity.</h2>
+      <p class="section-subtitle">Everything you need to design, launch, and learn from real-world experiments — nothing you don't.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card fade-up">
+        <div class="feature-icon indigo">&#9881;</div>
+        <h3>Experiment Builder</h3>
+        <p>Design landing pages, surveys, and ad tests with a simple drag-and-drop interface. No coding required.</p>
+      </div>
+      <div class="feature-card fade-up">
+        <div class="feature-icon cyan">&#9786;</div>
+        <h3>Live Tester Network</h3>
+        <p>Tap into thousands of college students who represent tomorrow's market. Real people, real feedback.</p>
+      </div>
+      <div class="feature-card fade-up">
+        <div class="feature-icon indigo">&#9883;</div>
+        <h3>Real-Time Analytics</h3>
+        <p>Track engagement, conversion, and sentiment as testers interact with your experiment. Watch results come in live.</p>
+      </div>
+      <div class="feature-card fade-up">
+        <div class="feature-icon cyan">&#10003;</div>
+        <h3>Assumption Scorecard</h3>
+        <p>Get a clear pass/fail signal on each hypothesis with confidence metrics. No more guessing.</p>
+      </div>
+      <div class="feature-card fade-up">
+        <div class="feature-icon indigo">&#9998;</div>
+        <h3>Insight Reports</h3>
+        <p>Automated summaries with key takeaways, charts, and recommended next steps so you can act fast.</p>
+      </div>
+      <div class="feature-card fade-up">
+        <div class="feature-icon cyan">&#9734;</div>
+        <h3>Team Collaboration</h3>
+        <p>Share experiments and results with co-founders, advisors, and investors. Keep everyone aligned.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Who It's For ═══ -->
+<section class="bg-light" id="audience">
+  <div class="container">
+    <div class="section-header fade-up">
+      <div class="section-label">Who It's For</div>
+      <h2 class="section-title">From Idea to Evidence.</h2>
+      <p class="section-subtitle">Whether you're pre-revenue or scaling up, ValidX helps you make evidence-based decisions.</p>
+    </div>
+    <div class="audience-grid">
+      <div class="audience-card fade-up">
+        <div class="audience-badge">Idea Stage</div>
+        <h3>Pre-Seed Founders</h3>
+        <p>You have an idea but no product yet. ValidX helps you prove demand before you write a single line of code or spend your savings.</p>
+      </div>
+      <div class="audience-card fade-up">
+        <div class="audience-badge">MVP Stage</div>
+        <h3>Early-Stage Startups</h3>
+        <p>You've launched an MVP and need to validate product-market fit. Test pricing, features, and messaging with real users.</p>
+      </div>
+      <div class="audience-card fade-up">
+        <div class="audience-badge">Growth Stage</div>
+        <h3>Small Business Owners</h3>
+        <p>You're expanding into a new market or product line and need to test assumptions before investing heavily.</p>
+      </div>
+      <div class="audience-card fade-up">
+        <div class="audience-badge">Demo Day</div>
+        <h3>Accelerator Teams</h3>
+        <p>You're in a program and need fast evidence to present at demo day. Impress your cohort with real market data.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Use Cases ═══ -->
+<section class="bg-dark2" id="use-cases">
+  <div class="container">
+    <div class="section-header fade-up">
+      <div class="section-label">Use Cases</div>
+      <h2 class="section-title">What Can You Validate?</h2>
+      <p class="section-subtitle">Almost any business assumption. Here are some of the most common experiments founders run on ValidX.</p>
+    </div>
+    <div class="usecases-grid">
+      <div class="usecase-card fade-up">
+        <h3>Pricing Sensitivity</h3>
+        <p>Test whether your target market will pay $X for your product. Find the sweet spot before you commit.</p>
+      </div>
+      <div class="usecase-card fade-up">
+        <h3>Value Proposition</h3>
+        <p>See which messaging resonates most with next-gen consumers. Refine your pitch with real data.</p>
+      </div>
+      <div class="usecase-card fade-up">
+        <h3>Feature Priority</h3>
+        <p>Find out which features matter most to your audience before you invest months building the wrong ones.</p>
+      </div>
+      <div class="usecase-card fade-up">
+        <h3>Channel Strategy</h3>
+        <p>Discover where your audience actually discovers new products — Instagram, TikTok, Reddit, word of mouth.</p>
+      </div>
+      <div class="usecase-card fade-up">
+        <h3>Landing Page Conversion</h3>
+        <p>A/B test your landing page with real traffic and feedback before spending a dollar on paid ads.</p>
+      </div>
+      <div class="usecase-card fade-up">
+        <h3>Brand Positioning</h3>
+        <p>Test your brand identity and positioning against competitors with fresh eyes from digital-native consumers.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Pricing ═══ -->
+<section id="pricing">
+  <div class="container">
+    <div class="section-header" style="text-align:center">
+      <div class="section-label fade-up">Pricing</div>
+      <h2 class="section-title fade-up">Pay Per Validation. No Surprises.</h2>
+      <p class="section-subtitle fade-up" style="margin:0 auto">No subscriptions, no long-term contracts. You choose how many testers run your experiment — we charge per test based on depth.</p>
+    </div>
+    <div class="pricing-grid">
+      <!-- Starter -->
+      <div class="price-card fade-up">
+        <div class="price-name">Quick Test</div>
+        <div class="price-amount">$29 <span>/ test</span></div>
+        <div class="price-period">Single assumption, fast results</div>
+        <ul class="price-features">
+          <li>Single assumption test</li>
+          <li>Each tester reaches 10 people</li>
+          <li>Basic analytics dashboard</li>
+          <li>3-day turnaround</li>
+        </ul>
+        <a href="./app.html" class="btn btn-outline" style="width:100%">Get Started</a>
+      </div>
+      <!-- Growth -->
+      <div class="price-card featured fade-up">
+        <div class="price-badge">MOST POPULAR</div>
+        <div class="price-name">Deep Dive</div>
+        <div class="price-amount">$89 <span>/ test</span></div>
+        <div class="price-period">Multi-variable, deeper insights</div>
+        <ul class="price-features">
+          <li>Multi-variable testing</li>
+          <li>Each tester reaches 25 people</li>
+          <li>Full analytics + insight report</li>
+          <li>48-hour turnaround</li>
+        </ul>
+        <a href="./app.html" class="btn btn-cyan" style="width:100%">Get Started</a>
+      </div>
+      <!-- Scale -->
+      <div class="price-card fade-up">
+        <div class="price-name">Full Study</div>
+        <div class="price-amount">$250 <span>/ test</span></div>
+        <div class="price-period">Comprehensive validation</div>
+        <ul class="price-features">
+          <li>Comprehensive validation</li>
+          <li>Each tester reaches 50+ people</li>
+          <li>Custom targeting + audience segments</li>
+          <li>Priority 24-hour turnaround</li>
+        </ul>
+        <a href="./app.html" class="btn btn-outline" style="width:100%">Get Started</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CTA / Contact ═══ -->
+<section class="cta-section bg-dark2" id="contact">
+  <div class="container">
+    <div class="section-label fade-up">Ready to Validate?</div>
+    <h2 class="fade-up" style="font-size:3rem;font-weight:800;color:var(--white);letter-spacing:-1px;margin-bottom:16px">Stop Guessing. Start Testing.</h2>
+    <p class="fade-up" style="font-size:1.15rem;color:var(--text-med);margin-bottom:36px">Join the next wave of founders who validate before they build. Early access is open now.</p>
+    <div class="cta-actions fade-up">
+      <a href="./app.html" class="btn btn-primary btn-lg">Launch the App</a>
+      <a href="#home" class="btn btn-outline btn-lg">Back to Top</a>
+    </div>
+    <div class="contact-row fade-up">
+      <div class="contact-item"><span>Email:</span> hello@validx.io</div>
+      <div class="contact-item"><span>Web:</span> validx.io</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Footer ═══ -->
+<footer>
+  <div class="container">
+    <a href="#home" class="logo">Valid<span>X</span></a>
+    <p>&copy; 2026 ValidX. All rights reserved.</p>
+    <div class="footer-links">
+      <a href="#features">Features</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#contact">Contact</a>
+    </div>
+  </div>
+</footer>
+
+<!-- ═══ Scripts ═══ -->
+<script>
+// Scroll-triggered nav background
+const nav = document.getElementById('navbar');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 40);
+});
+
+// Active nav link
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('.nav-links a:not(.btn)');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => {
+    if (window.scrollY >= s.offsetTop - 200) current = s.getAttribute('id');
+  });
+  navLinks.forEach(link => {
+    link.classList.remove('active');
+    if (link.getAttribute('href') === '#' + current) link.classList.add('active');
+  });
+});
+
+// Fade-up on scroll
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+// Close mobile menu on link click
+document.querySelectorAll('.nav-links a').forEach(a => {
+  a.addEventListener('click', () => {
+    document.querySelector('.nav-links').classList.remove('open');
+  });
+});
+
+// ── PWA: Service Worker Registration ──────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').then(reg => {
+      // Check for updates on each page load
+      reg.update().catch(() => {});
+      // If a waiting worker is found, activate it
+      if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+      reg.addEventListener('updatefound', () => {
+        const nw = reg.installing;
+        if (nw) nw.addEventListener('statechange', () => {
+          if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+            nw.postMessage({ type: 'SKIP_WAITING' });
+          }
+        });
+      });
+    }).catch(() => {});
+    // Reload once when a new SW takes control
+    let refreshed = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (refreshed) return;
+      refreshed = true;
+      // Soft reload so users see updates without jarring interruptions
+      // Only reload on subsequent visits, not the initial install
+      if (navigator.serviceWorker.controller) {
+        // Uncomment if you want auto-reload on update:
+        // location.reload();
+      }
+    });
+  });
+}
+</script>
+</body>
+</html>
