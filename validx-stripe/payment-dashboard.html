@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ValidX — Payment Dashboard</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #0F172A;
+    color: #CBD5E1;
+    min-height: 100vh;
+  }
+
+  /* ── Header ─────────────────────── */
+  .header {
+    background: #1E293B;
+    border-bottom: 1px solid #334155;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .header h1 {
+    font-size: 20px;
+    color: #F1F5F9;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .header h1 span {
+    background: linear-gradient(135deg, #6366F1, #06B6D4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 800;
+  }
+  .mode-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .mode-test { background: #F59E0B22; color: #F59E0B; border: 1px solid #F59E0B44; }
+  .mode-live { background: #10B98122; color: #10B981; border: 1px solid #10B98144; }
+
+  /* ── Layout ─────────────────────── */
+  .container { max-width: 1100px; margin: 0 auto; padding: 24px; }
+
+  /* ── Stats Row ──────────────────── */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .stat-card {
+    background: #1E293B;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .stat-card .label { font-size: 13px; color: #94A3B8; margin-bottom: 6px; }
+  .stat-card .value { font-size: 28px; font-weight: 700; color: #F1F5F9; }
+  .stat-card .sub { font-size: 12px; color: #64748B; margin-top: 4px; }
+
+  /* ── Payment Links Section ──────── */
+  .section-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #F1F5F9;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .tier-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .tier-card {
+    background: #1E293B;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 20px;
+    transition: border-color 0.2s;
+  }
+  .tier-card:hover { border-color: #6366F1; }
+  .tier-card .tier-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .tier-card .tier-name { font-size: 18px; font-weight: 700; color: #F1F5F9; }
+  .tier-card .tier-price {
+    font-size: 24px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #6366F1, #06B6D4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .tier-card .tier-desc { font-size: 13px; color: #94A3B8; margin-bottom: 16px; line-height: 1.5; }
+  .link-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .link-input {
+    flex: 1;
+    background: #0F172A;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: #CBD5E1;
+    font-size: 13px;
+    font-family: 'SF Mono', monospace;
+    outline: none;
+  }
+  .link-input:focus { border-color: #6366F1; }
+  .btn {
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .btn-primary {
+    background: #6366F1;
+    color: white;
+  }
+  .btn-primary:hover { background: #4F46E5; }
+  .btn-secondary {
+    background: #334155;
+    color: #CBD5E1;
+  }
+  .btn-secondary:hover { background: #475569; }
+  .btn-success {
+    background: #10B981;
+    color: white;
+  }
+
+  /* ── Payments Table ─────────────── */
+  .table-wrap {
+    background: #1E293B;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 32px;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left;
+    padding: 12px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #94A3B8;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: #1E293B;
+    border-bottom: 1px solid #334155;
+  }
+  td {
+    padding: 14px 16px;
+    font-size: 14px;
+    border-bottom: 1px solid #334155;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover { background: #334155; }
+
+  .status-badge {
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .status-succeeded { background: #10B98122; color: #10B981; }
+  .status-pending { background: #F59E0B22; color: #F59E0B; }
+  .status-failed { background: #EF444422; color: #EF4444; }
+  .status-refunded { background: #6366F122; color: #818CF8; }
+
+  .tier-tag {
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .tier-quick-test { background: #06B6D422; color: #22D3EE; }
+  .tier-deep-dive { background: #6366F122; color: #818CF8; }
+  .tier-full-study { background: #10B98122; color: #34D399; }
+
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: #64748B;
+  }
+  .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; line-height: 1.6; }
+
+  /* ── Setup Section ──────────────── */
+  .setup-box {
+    background: #1E293B;
+    border: 1px solid #F59E0B44;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 32px;
+  }
+  .setup-box h3 { color: #F59E0B; margin-bottom: 12px; }
+  .setup-box input {
+    width: 100%;
+    background: #0F172A;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 12px 14px;
+    color: #CBD5E1;
+    font-size: 14px;
+    font-family: 'SF Mono', monospace;
+    outline: none;
+    margin: 8px 0 16px;
+  }
+  .setup-box input:focus { border-color: #F59E0B; }
+  .setup-box input::placeholder { color: #64748B; }
+
+  /* ── Toast ──────────────────────── */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #10B981;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.3s;
+    pointer-events: none;
+    z-index: 1000;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* ── Loading ────────────────────── */
+  .spinner {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border: 2px solid #334155;
+    border-top-color: #6366F1;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .actions-cell { display: flex; gap: 6px; }
+</style>
+</head>
+<body>
+
+<!-- ── Header ────────────────────── -->
+<div class="header">
+  <h1><span>ValidX</span> Payment Dashboard</h1>
+  <div id="modeBadge" class="mode-badge mode-test">Test Mode</div>
+</div>
+
+<div class="container">
+
+  <!-- ── Setup (shown if no config) ─── -->
+  <div id="setupBox" class="setup-box" style="display:none;">
+    <h3>First-Time Setup</h3>
+    <p>Paste your Stripe secret key below, then click Connect. This only stores the key in your browser for this session.</p>
+    <input type="password" id="apiKeyInput" placeholder="sk_test_..." autocomplete="off">
+    <div style="display:flex; gap:12px; align-items:center;">
+      <button class="btn btn-primary" onclick="connectStripe()">Connect to Stripe</button>
+      <span style="color:#64748B; font-size:13px;">Or load from <code>stripe-config.json</code> if you already ran <code>setup-stripe.js</code></span>
+    </div>
+  </div>
+
+  <!-- ── Stats ────────────────────── -->
+  <div class="stats">
+    <div class="stat-card">
+      <div class="label">Total Revenue</div>
+      <div class="value" id="totalRevenue">$0.00</div>
+      <div class="sub" id="revenueCount">0 payments</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Available Balance</div>
+      <div class="value" id="availableBalance">$0.00</div>
+      <div class="sub">Ready to withdraw</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Pending</div>
+      <div class="value" id="pendingBalance">$0.00</div>
+      <div class="sub">Processing</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">This Month</div>
+      <div class="value" id="monthRevenue">$0.00</div>
+      <div class="sub" id="monthCount">0 payments</div>
+    </div>
+  </div>
+
+  <!-- ── Payment Links ────────────── -->
+  <div class="section-title">Payment Links — Share These Anywhere</div>
+  <div id="tierCards" class="tier-cards">
+    <div class="tier-card">
+      <div class="tier-header">
+        <div class="tier-name">Quick Test</div>
+        <div class="tier-price">$29</div>
+      </div>
+      <div class="tier-desc">10 testers, 48-hour turnaround. Fast validation for early-stage ideas.</div>
+      <div class="link-row">
+        <input class="link-input" id="link-quick-test" value="Run setup-stripe.js first" readonly>
+        <button class="btn btn-primary" onclick="copyLink('quick-test')">Copy</button>
+        <button class="btn btn-secondary" onclick="openLink('quick-test')">Open</button>
+      </div>
+    </div>
+    <div class="tier-card">
+      <div class="tier-header">
+        <div class="tier-name">Deep Dive</div>
+        <div class="tier-price">$89</div>
+      </div>
+      <div class="tier-desc">25 testers with focus group feedback. Detailed product-market fit analysis.</div>
+      <div class="link-row">
+        <input class="link-input" id="link-deep-dive" value="Run setup-stripe.js first" readonly>
+        <button class="btn btn-primary" onclick="copyLink('deep-dive')">Copy</button>
+        <button class="btn btn-secondary" onclick="openLink('deep-dive')">Open</button>
+      </div>
+    </div>
+    <div class="tier-card">
+      <div class="tier-header">
+        <div class="tier-name">Full Study</div>
+        <div class="tier-price">$250</div>
+      </div>
+      <div class="tier-desc">50 testers, comprehensive study. Full market analysis and recommendations.</div>
+      <div class="link-row">
+        <input class="link-input" id="link-full-study" value="Run setup-stripe.js first" readonly>
+        <button class="btn btn-primary" onclick="copyLink('full-study')">Copy</button>
+        <button class="btn btn-secondary" onclick="openLink('full-study')">Open</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Recent Payments ──────────── -->
+  <div class="section-title">Recent Payments</div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Customer</th>
+          <th>Tier</th>
+          <th>Amount</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="paymentsBody">
+        <tr>
+          <td colspan="5" class="empty-state">
+            <div class="icon">💳</div>
+            <p>No payments yet.<br>Share your payment links to start receiving payments!</p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- ── Toast ──────────────────────── -->
+<div class="toast" id="toast">Copied!</div>
+
+<script>
+  // ── State ────────────────────────
+  let stripeConfig = null;
+  let apiBase = '';
+
+  // ── Init ─────────────────────────
+  async function init() {
+    // Try to load config from file (if served from the backend)
+    try {
+      const res = await fetch('./stripe-config.json');
+      if (res.ok) {
+        stripeConfig = await res.json();
+        applyConfig();
+        return;
+      }
+    } catch {}
+
+    // Try loading from the API
+    try {
+      apiBase = window.location.port === '4000' ? '' : 'http://localhost:4000';
+      const res = await fetch(apiBase + '/api/stripe/payment-links');
+      if (res.ok) {
+        const data = await res.json();
+        stripeConfig = { mode: data.mode, tiers: data.tiers };
+        applyConfig();
+        loadPayments();
+        loadBalance();
+        return;
+      }
+    } catch {}
+
+    // Show setup if nothing loaded
+    document.getElementById('setupBox').style.display = 'block';
+  }
+
+  function applyConfig() {
+    if (!stripeConfig) return;
+
+    // Update mode badge
+    const badge = document.getElementById('modeBadge');
+    if (stripeConfig.mode === 'live') {
+      badge.textContent = 'Live Mode';
+      badge.className = 'mode-badge mode-live';
+    }
+
+    // Populate payment links
+    for (const tier of stripeConfig.tiers) {
+      const input = document.getElementById('link-' + tier.tier);
+      if (input && tier.paymentLinkUrl) {
+        input.value = tier.paymentLinkUrl;
+      }
+    }
+  }
+
+  // ── Copy Link ────────────────────
+  function copyLink(tierId) {
+    const input = document.getElementById('link-' + tierId);
+    if (!input || input.value.startsWith('Run ')) return;
+
+    navigator.clipboard.writeText(input.value).then(() => {
+      showToast('Link copied!');
+    }).catch(() => {
+      input.select();
+      document.execCommand('copy');
+      showToast('Link copied!');
+    });
+  }
+
+  function openLink(tierId) {
+    const input = document.getElementById('link-' + tierId);
+    if (!input || input.value.startsWith('Run ')) return;
+    window.open(input.value, '_blank');
+  }
+
+  // ── Load Payments ────────────────
+  async function loadPayments() {
+    try {
+      const res = await fetch(apiBase + '/api/stripe/payments');
+      if (!res.ok) return;
+      const data = await res.json();
+
+      if (data.payments.length === 0) return;
+
+      const tbody = document.getElementById('paymentsBody');
+      tbody.innerHTML = '';
+
+      let totalAmount = 0;
+      let monthAmount = 0;
+      let monthCount = 0;
+      const now = new Date();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+      for (const p of data.payments) {
+        if (p.status === 'succeeded') {
+          totalAmount += p.amount;
+          const pDate = new Date(p.created);
+          if (pDate >= monthStart) {
+            monthAmount += p.amount;
+            monthCount++;
+          }
+        }
+
+        const tr = document.createElement('tr');
+        const date = new Date(p.created);
+        const tierClass = 'tier-' + (p.tier || 'unknown');
+
+        tr.innerHTML = `
+          <td>${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
+          <td>${p.customerEmail || 'N/A'}</td>
+          <td><span class="tier-tag ${tierClass}">${formatTierName(p.tier)}</span></td>
+          <td style="font-weight:600; color:#F1F5F9;">$${(p.amount / 100).toFixed(2)}</td>
+          <td><span class="status-badge status-${p.status}">${p.status}</span></td>
+        `;
+        tbody.appendChild(tr);
+      }
+
+      document.getElementById('totalRevenue').textContent = '$' + (totalAmount / 100).toFixed(2);
+      document.getElementById('revenueCount').textContent = data.payments.filter(p => p.status === 'succeeded').length + ' payments';
+      document.getElementById('monthRevenue').textContent = '$' + (monthAmount / 100).toFixed(2);
+      document.getElementById('monthCount').textContent = monthCount + ' payments';
+    } catch (err) {
+      console.log('Could not load payments:', err.message);
+    }
+  }
+
+  // ── Load Balance ─────────────────
+  async function loadBalance() {
+    try {
+      const res = await fetch(apiBase + '/api/stripe/balance');
+      if (!res.ok) return;
+      const data = await res.json();
+
+      const available = data.available.find(b => b.currency === 'usd');
+      const pending = data.pending.find(b => b.currency === 'usd');
+
+      if (available) {
+        document.getElementById('availableBalance').textContent = '$' + (available.amount / 100).toFixed(2);
+      }
+      if (pending) {
+        document.getElementById('pendingBalance').textContent = '$' + (pending.amount / 100).toFixed(2);
+      }
+    } catch (err) {
+      console.log('Could not load balance:', err.message);
+    }
+  }
+
+  // ── Connect (manual key entry) ───
+  async function connectStripe() {
+    const key = document.getElementById('apiKeyInput').value.trim();
+    if (!key.startsWith('sk_')) {
+      showToast('Key must start with sk_test_ or sk_live_');
+      return;
+    }
+    // In a real app, you'd send this to your backend securely
+    // For now, just note that the user needs to run setup-stripe.js
+    showToast('Add this key to your .env file and run: node setup-stripe.js');
+  }
+
+  // ── Helpers ──────────────────────
+  function formatTierName(tier) {
+    const names = {
+      'quick-test': 'Quick Test',
+      'deep-dive': 'Deep Dive',
+      'full-study': 'Full Study',
+    };
+    return names[tier] || tier || 'Unknown';
+  }
+
+  function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2000);
+  }
+
+  // ── Boot ─────────────────────────
+  init();
+</script>
+</body>
+</html>
