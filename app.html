@@ -17,6 +17,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 /* ═══════════════════════════════════════════════════
    RESET & BASE
@@ -190,12 +191,21 @@ input,textarea,select{font-size:16px !important}
 .form-group{margin-bottom:20px}
 .form-group label{display:block;font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:8px;letter-spacing:.2px}
 .form-group .hint{font-size:.76rem;color:var(--text-med);margin-top:6px;line-height:1.4}
-input[type="text"],input[type="number"],input[type="email"],textarea,select{
+input[type="text"],input[type="number"],input[type="email"],input[type="password"],textarea,select{
   width:100%;padding:14px 16px;border-radius:var(--radius-sm);
   border:1.5px solid var(--dark3);background:var(--dark);color:var(--white);
   font-size:16px;font-family:inherit;transition:border-color .2s;outline:none;
 }
 input:focus,textarea:focus,select:focus{border-color:var(--indigo)}
+.password-field{position:relative}
+.password-field input{padding-right:78px}
+.password-toggle{
+  position:absolute;right:8px;top:50%;transform:translateY(-50%);
+  min-height:34px;padding:0 10px;border-radius:var(--radius-xs);
+  background:rgba(51,65,85,.72);color:var(--text);
+  font-size:.76rem;font-weight:800;letter-spacing:.2px;
+}
+.password-toggle:active{transform:translateY(-50%) scale(.96);color:var(--white)}
 textarea{resize:none;min-height:110px;line-height:1.5}
 select{cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2394A3B8' d='M6 8L0 0h12z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;padding-right:40px}
 select option{background:var(--dark2);color:var(--white)}
@@ -508,6 +518,81 @@ const LS = {
   },
 };
 
+const API = window.VALIDX_API || 'http://localhost:4000/api';
+let supabaseClientPromise = null;
+
+async function loadSupabaseCreateClient() {
+  if (window.supabase?.createClient) return window.supabase.createClient;
+  const mod = await import('https://esm.sh/@supabase/supabase-js@2');
+  return mod.createClient;
+}
+
+async function api(path, opts = {}) {
+  const token = localStorage.getItem('vx_supabase_token');
+  const res = await fetch(API + path, {
+    ...opts,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(opts.headers || {}),
+    },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  return data;
+}
+
+async function getSupabaseClient() {
+  if (!supabaseClientPromise) {
+    supabaseClientPromise = fetch(API + '/config')
+      .then(res => res.json())
+      .then(async ({ supabase: cfg }) => {
+        if (!cfg || !cfg.enabled) throw new Error('Supabase is not configured on the API server');
+        const createClient = await loadSupabaseCreateClient();
+        return createClient(cfg.url, cfg.anonKey);
+      });
+  }
+  return supabaseClientPromise;
+}
+
+function profileFromApiUser(user, fallbackRole) {
+  const role = user.role || fallbackRole || 'tester';
+  return {
+    id: user.id,
+    supabaseId: user.supabase_id,
+    role,
+    firstName: user.first_name || 'New',
+    lastName: user.last_name || 'User',
+    email: user.email,
+    company: user.company || '',
+    industry: user.industry || 'SaaS',
+    companySize: user.company_size || '1-10',
+    school: user.school || '',
+    major: user.major || '',
+    age: user.age ? String(user.age) : '',
+    createdAt: user.created_at ? user.created_at * 1000 : Date.now(),
+    authMethod: user.auth_method || 'supabase',
+  };
+}
+
+async function syncSupabaseProfile(session, fallbackRole) {
+  if (!session?.access_token) throw new Error('Missing Supabase session');
+  localStorage.setItem('vx_supabase_token', session.access_token);
+  const { user } = await api('/auth/me');
+  return profileFromApiUser(user, fallbackRole);
+}
+
+async function beginGoogleAuth(role) {
+  const supabase = await getSupabaseClient();
+  LS.set('vx_pending_role', role);
+  const redirectTo = window.location.href.split('#')[0];
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo },
+  });
+  if (error) throw error;
+}
+
 // ═══════════════════════════════════════════════════
 // SEED DATA
 // ═══════════════════════════════════════════════════
@@ -626,19 +711,48 @@ function App() {
 
   const handleLogout = () => {
     haptic();
+    getSupabaseClient().then(supabase => supabase.auth.signOut()).catch(() => {});
     setProfile(null);
     setRole(null);
     setAuthMode(null);
+    localStorage.removeItem('vx_supabase_token');
     LS.set('vx_role', null);
     LS.set('vx_profile', null);
   };
 
   const handleAuthSuccess = (newProfile) => {
     haptic(30);
+    if (newProfile.role) setRole(newProfile.role);
     setProfile(newProfile);
     setAuthMode(null);
     showToast(`Welcome${newProfile.firstName ? ', ' + newProfile.firstName : ''}!`);
   };
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const supabase = await getSupabaseClient();
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session || !active) return;
+        const fallbackRole = LS.get('vx_pending_role', role);
+        if (fallbackRole && !session.user?.user_metadata?.role) {
+          await supabase.auth.updateUser({
+            data: { ...(session.user?.user_metadata || {}), role: fallbackRole },
+          });
+        }
+        const synced = await syncSupabaseProfile(session, fallbackRole);
+        if (!active) return;
+        LS.set('vx_pending_role', null);
+        setRole(synced.role);
+        setProfile(synced);
+        setAuthMode(null);
+      } catch (e) {
+        console.warn('Supabase session restore skipped:', e.message);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   if (splash) return <Splash />;
   if (!onboarded) return <Onboarding onDone={() => setOnboarded(true)} />;
@@ -767,6 +881,29 @@ function GoogleButton({ label, onClick }) {
   );
 }
 
+function PasswordField({ value, onChange, placeholder, autoComplete }) {
+  const [visible, setVisible] = useState(false);
+  return (
+    <div className="password-field">
+      <input
+        type={visible ? 'text' : 'password'}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        autoComplete={autoComplete}
+      />
+      <button
+        type="button"
+        className="password-toggle"
+        onClick={() => { haptic(5); setVisible(v => !v); }}
+        aria-label={visible ? 'Hide password' : 'Show password'}
+      >
+        {visible ? 'Hide' : 'Show'}
+      </button>
+    </div>
+  );
+}
+
 // Simulate Google OAuth (in production, this calls Google Identity Services)
 function mockGoogleAuth(role) {
   const demoNames = role === 'business'
@@ -787,17 +924,48 @@ function LoginScreen({ role, onSuccess, onSwitchToRegister, onBack }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [err, setErr] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleGoogle = () => {
+  const handleGoogle = async () => {
     haptic();
-    setTimeout(() => onSuccess(mockGoogleAuth(role)), 400);
+    setErr('');
+    setLoading(true);
+    try {
+      await beginGoogleAuth(role);
+    } catch (e) {
+      setErr(e.message);
+      setLoading(false);
+    }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email.includes('@')) { setErr('Enter a valid email'); return; }
     if (password.length < 6) { setErr('Password must be at least 6 characters'); return; }
     haptic();
+    setErr('');
+    setLoading(true);
+    try {
+      const supabase = await getSupabaseClient();
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+      if (error) throw error;
+      if (role && !data.session?.user?.user_metadata?.role) {
+        await supabase.auth.updateUser({
+          data: { ...(data.session?.user?.user_metadata || {}), role },
+        });
+      }
+      const profile = await syncSupabaseProfile(data.session, role);
+      if (profile.role !== role) throw new Error(`This account is registered as a ${profile.role}`);
+      onSuccess(profile);
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setLoading(false);
+    }
+    return;
     // Try to load saved profile matching this email
     const saved = LS.get('vx_accounts', []);
     const match = saved.find(a => a.email === email && a.role === role);
@@ -816,7 +984,7 @@ function LoginScreen({ role, onSuccess, onSwitchToRegister, onBack }) {
         <h1>Welcome back</h1>
         <p className="auth-sub">Log in to continue to your {role === 'business' ? 'dashboard' : 'experiments'}.</p>
 
-        <GoogleButton label="Continue with Google" onClick={handleGoogle} />
+        <GoogleButton label={loading ? "Connecting..." : "Continue with Google"} onClick={handleGoogle} />
 
         <div className="auth-divider">OR</div>
 
@@ -827,10 +995,17 @@ function LoginScreen({ role, onSuccess, onSwitchToRegister, onBack }) {
           </div>
           <div className="form-group" style={{margin:0}}>
             <label>Password</label>
-            <input type="password" value={password} onChange={e => { setPassword(e.target.value); setErr(''); }} placeholder="••••••••" autoComplete="current-password" />
+            <PasswordField
+              value={password}
+              onChange={e => { setPassword(e.target.value); setErr(''); }}
+              placeholder="••••••••"
+              autoComplete="current-password"
+            />
           </div>
           {err && <div className="field-error">{err}</div>}
-          <button type="submit" className="btn btn-primary btn-lg btn-block auth-submit">Log In</button>
+          <button type="submit" className="btn btn-primary btn-lg btn-block auth-submit" disabled={loading}>
+            {loading ? 'Logging in...' : 'Log In'}
+          </button>
         </form>
 
         <div className="auth-switch">
@@ -858,21 +1033,21 @@ function RegisterScreen({ role, onSuccess, onSwitchToLogin, onBack }) {
   const [major, setMajor] = useState('');
   const [age, setAge] = useState('');
   const [err, setErr] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleGoogle = () => {
+  const handleGoogle = async () => {
     haptic();
-    setTimeout(() => {
-      const p = mockGoogleAuth(role);
-      // Save to accounts list
-      const accounts = LS.get('vx_accounts', []);
-      if (!accounts.find(a => a.email === p.email)) {
-        LS.set('vx_accounts', [...accounts, p]);
-      }
-      onSuccess(p);
-    }, 400);
+    setErr('');
+    setLoading(true);
+    try {
+      await beginGoogleAuth(role);
+    } catch (e) {
+      setErr(e.message);
+      setLoading(false);
+    }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setErr('');
     if (!firstName.trim() || !lastName.trim()) return setErr('Please enter your name');
@@ -889,6 +1064,32 @@ function RegisterScreen({ role, onSuccess, onSwitchToLogin, onBack }) {
     const profile = role === 'business'
       ? { role, firstName: firstName.trim(), lastName: lastName.trim(), email: email.trim(), company: company.trim(), industry, companySize, createdAt: Date.now(), authMethod: 'email' }
       : { role, firstName: firstName.trim(), lastName: lastName.trim(), email: email.trim(), school: school.trim(), major: major.trim(), age, createdAt: Date.now(), authMethod: 'email' };
+
+    setLoading(true);
+    try {
+      const supabase = await getSupabaseClient();
+      const { data, error } = await supabase.auth.signUp({
+        email: profile.email,
+        password,
+        options: {
+          emailRedirectTo: window.location.href.split('#')[0],
+          data: profile,
+        },
+      });
+      if (error) throw error;
+      if (!data.session) {
+        setErr('Check your email to confirm your account, then log in.');
+        return;
+      }
+      const synced = await syncSupabaseProfile(data.session, role);
+      haptic();
+      onSuccess(synced);
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setLoading(false);
+    }
+    return;
 
     // Save to accounts (in production, this hits the backend)
     const accounts = LS.get('vx_accounts', []);
@@ -915,7 +1116,7 @@ function RegisterScreen({ role, onSuccess, onSwitchToLogin, onBack }) {
             : 'Join the tester network and get paid for sharing real market feedback.'}
         </p>
 
-        <GoogleButton label="Sign up with Google" onClick={handleGoogle} />
+        <GoogleButton label={loading ? "Connecting..." : "Sign up with Google"} onClick={handleGoogle} />
 
         <div className="auth-divider">OR</div>
 
@@ -936,7 +1137,12 @@ function RegisterScreen({ role, onSuccess, onSwitchToLogin, onBack }) {
           </div>
           <div className="form-group" style={{margin:0}}>
             <label>Password</label>
-            <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="At least 6 characters" autoComplete="new-password" />
+            <PasswordField
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="At least 6 characters"
+              autoComplete="new-password"
+            />
           </div>
 
           {role === 'business' ? (
@@ -993,8 +1199,8 @@ function RegisterScreen({ role, onSuccess, onSwitchToLogin, onBack }) {
 
           {err && <div className="field-error">{err}</div>}
 
-          <button type="submit" className="btn btn-primary btn-lg btn-block auth-submit">
-            Create {role === 'business' ? 'Business' : 'Tester'} Account
+          <button type="submit" className="btn btn-primary btn-lg btn-block auth-submit" disabled={loading}>
+            {loading ? 'Creating account...' : `Create ${role === 'business' ? 'Business' : 'Tester'} Account`}
           </button>
         </form>
 

@@ -34,6 +34,8 @@ npm run seed                 # optional — creates demo data
 npm start
 ```
 
+For Supabase Auth, set `SUPABASE_URL` and `SUPABASE_ANON_KEY` in `.env`. The browser clients sign in with Supabase and send the Supabase access token to this API. The API verifies that token with Supabase, then links or creates the matching local SQLite user row.
+
 You'll see:
 
 ```
@@ -46,7 +48,7 @@ Now visit:
 - **API health check**: http://localhost:4000/api/health
 - **Admin panel**: http://localhost:4000/admin.html
 
-Default admin credentials come from `.env` — change `ADMIN_EMAIL` and `ADMIN_PASSWORD` before deploying anywhere.
+Create or invite your admin user in Supabase Auth using the same email as `ADMIN_EMAIL`. On first API sign-in, that Supabase user is linked to the local admin row.
 
 ## Seeded demo accounts
 

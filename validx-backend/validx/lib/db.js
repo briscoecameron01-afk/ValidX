@@ -1,3 +1,4 @@
+require('./env');
 const Database = require('better-sqlite3');
 const path = require('path');
 const fs = require('fs');
@@ -16,6 +17,7 @@ CREATE TABLE IF NOT EXISTS users (
   email        TEXT NOT NULL UNIQUE,
   password_hash TEXT,
   auth_method  TEXT NOT NULL DEFAULT 'email',
+  supabase_id  TEXT UNIQUE,
   google_id    TEXT,
   first_name   TEXT NOT NULL,
   last_name    TEXT NOT NULL,
@@ -94,5 +96,15 @@ CREATE TABLE IF NOT EXISTS audit_log (
   created_at  INTEGER NOT NULL DEFAULT (strftime('%s','now'))
 );
 `);
+
+function ensureColumn(table, column, definition) {
+  const columns = db.prepare(`PRAGMA table_info(${table})`).all();
+  if (!columns.some(c => c.name === column)) {
+    db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+  }
+}
+
+ensureColumn('users', 'supabase_id', 'TEXT');
+db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_supabase_id ON users(supabase_id) WHERE supabase_id IS NOT NULL');
 
 module.exports = db;

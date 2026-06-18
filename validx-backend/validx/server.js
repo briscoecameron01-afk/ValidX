@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('./lib/env');
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -7,6 +7,7 @@ const path = require('path');
 
 const db = require('./lib/db');
 const { hashPassword } = require('./lib/auth');
+const { getPublicSupabaseConfig } = require('./lib/supabaseAuth');
 
 const authRoutes = require('./routes/auth');
 const experimentRoutes = require('./routes/experiments');
@@ -39,6 +40,9 @@ app.use('/api/auth', rateLimit({
 
 // ── Routes ────────────────────────────────────
 app.get('/api/health', (req, res) => res.json({ ok: true, ts: Date.now() }));
+app.get('/api/config', (req, res) => {
+  res.json({ supabase: getPublicSupabaseConfig() });
+});
 app.use('/api/auth', authRoutes);
 app.use('/api/experiments', experimentRoutes);
 app.use('/api/payouts', payoutRoutes);

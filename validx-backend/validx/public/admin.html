@@ -8,6 +8,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   :root{
@@ -39,6 +40,14 @@
     font-family:inherit;transition:border-color .15s;
   }
   input:focus,select:focus,textarea:focus{outline:none;border-color:var(--indigo)}
+  .password-field{position:relative}
+  .password-field input{padding-right:74px}
+  .password-toggle{
+    position:absolute;right:7px;top:50%;transform:translateY(-50%);
+    min-height:30px;padding:0 10px;border-radius:var(--radius-sm);
+    background:var(--bg3);color:var(--text);font-size:.74rem;font-weight:700;
+  }
+  .password-toggle:hover{color:var(--white);background:#475569}
   .btn{
     display:inline-flex;align-items:center;justify-content:center;gap:8px;
     padding:11px 18px;border-radius:var(--radius-sm);font-weight:600;font-size:.88rem;
@@ -152,6 +161,35 @@ const { useState, useEffect, useCallback } = React;
 
 // API base — change this if backend runs on a different host
 const API = window.VALIDX_API || 'http://localhost:4000/api';
+let supabaseClientPromise = null;
+
+async function loadSupabaseCreateClient() {
+  if (window.supabase?.createClient) return window.supabase.createClient;
+  const mod = await import('https://esm.sh/@supabase/supabase-js@2');
+  return mod.createClient;
+}
+
+async function getSupabaseClient() {
+  if (!supabaseClientPromise) {
+    supabaseClientPromise = fetch(API + '/config')
+      .then(res => res.json())
+      .then(async ({ supabase: cfg }) => {
+        if (!cfg || !cfg.enabled) throw new Error('Supabase is not configured on the API server');
+        const createClient = await loadSupabaseCreateClient();
+        return createClient(cfg.url, cfg.anonKey);
+      });
+  }
+  return supabaseClientPromise;
+}
+
+async function syncAdminSession(session) {
+  if (!session?.access_token) throw new Error('Missing Supabase session');
+  localStorage.setItem('vx_admin_token', session.access_token);
+  const { user } = await api('/auth/me');
+  if (user.role !== 'admin') throw new Error('Not an admin account');
+  localStorage.setItem('vx_admin_user', JSON.stringify(user));
+  return user;
+}
 
 // ── API helper ──────────────────────────────────────
 async function api(path, opts = {}) {
@@ -174,6 +212,28 @@ function fmtDate(ts) {
   return new Date(ts * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
+function PasswordField({ value, onChange }) {
+  const [visible, setVisible] = useState(false);
+  return (
+    <div className="password-field">
+      <input
+        type={visible ? 'text' : 'password'}
+        value={value}
+        onChange={onChange}
+        autoComplete="current-password"
+      />
+      <button
+        type="button"
+        className="password-toggle"
+        onClick={() => setVisible(v => !v)}
+        aria-label={visible ? 'Hide password' : 'Show password'}
+      >
+        {visible ? 'Hide' : 'Show'}
+      </button>
+    </div>
+  );
+}
+
 // ═══════════════════════════════════════════════════
 // LOGIN
 // ═══════════════════════════════════════════════════
@@ -187,13 +247,13 @@ function Login({ onLogin }) {
     e.preventDefault();
     setErr(''); setLoading(true);
     try {
-      const { token, user } = await api('/auth/login', {
-        method: 'POST',
-        body: JSON.stringify({ email, password }),
+      const supabase = await getSupabaseClient();
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
-      if (user.role !== 'admin') throw new Error('Not an admin account');
-      localStorage.setItem('vx_admin_token', token);
-      localStorage.setItem('vx_admin_user', JSON.stringify(user));
+      if (error) throw error;
+      const user = await syncAdminSession(data.session);
       onLogin(user);
     } catch (e) {
       setErr(e.message);
@@ -213,7 +273,7 @@ function Login({ onLogin }) {
         </div>
         <div className="form-group">
           <label>Password</label>
-          <input type="password" value={password} onChange={e => setPassword(e.target.value)} />
+          <PasswordField value={password} onChange={e => setPassword(e.target.value)} />
         </div>
         {err && <div className="err">{err}</div>}
         <button type="submit" className="btn btn-primary btn-block" disabled={loading} style={{marginTop:16}}>
@@ -593,17 +653,25 @@ function App() {
   });
 
   useEffect(() => {
-    // Verify session still valid on load
-    if (user) {
-      api('/auth/me').catch(() => {
+    let active = true;
+    (async () => {
+      try {
+        const supabase = await getSupabaseClient();
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) throw new Error('No Supabase session');
+        const refreshedUser = await syncAdminSession(session);
+        if (active) setUser(refreshedUser);
+      } catch {
         localStorage.removeItem('vx_admin_token');
         localStorage.removeItem('vx_admin_user');
-        setUser(null);
-      });
-    }
+        if (active) setUser(null);
+      }
+    })();
+    return () => { active = false; };
   }, []);
 
   function logout() {
+    getSupabaseClient().then(supabase => supabase.auth.signOut()).catch(() => {});
     localStorage.removeItem('vx_admin_token');
     localStorage.removeItem('vx_admin_user');
     setUser(null);
