@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>ValidX — Mom Test</title>
+<meta name="theme-color" content="#0F172A">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icons/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --dark:#0F172A;--dark2:#1E293B;--dark3:#334155;--dark4:#475569;
+  --indigo:#6366F1;--indigo-lt:#818CF8;--indigo-dk:#4F46E5;
+  --cyan:#06B6D4;--cyan-lt:#22D3EE;
+  --green:#10B981;--green-lt:#34D399;
+  --red:#EF4444;--orange:#F59E0B;
+  --light:#F1F5F9;--white:#FFF;
+  --text:#CBD5E1;--text-med:#94A3B8;
+  --radius:16px;--radius-sm:10px;
+  --sat:env(safe-area-inset-top,0px);
+  --sab:env(safe-area-inset-bottom,0px);
+}
+html,body{height:100%;overflow:hidden}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  background:var(--dark);color:var(--text);
+}
+
+/* ── Slide Container ─────────────── */
+.slide-viewport{
+  position:relative;width:100%;height:100vh;height:100dvh;
+  overflow:hidden;
+}
+.slide-track{
+  display:flex;height:100%;
+  transition:transform 0.45s cubic-bezier(0.16,1,0.3,1);
+  will-change:transform;
+}
+.slide{
+  min-width:100%;height:100%;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:24px 20px calc(24px + var(--sab));
+  position:relative;
+}
+
+/* ── Progress Bar ─────────────────── */
+.progress-bar{
+  position:fixed;top:0;left:0;right:0;
+  height:4px;background:var(--dark3);z-index:100;
+  padding-top:var(--sat);
+}
+.progress-fill{
+  height:100%;background:linear-gradient(90deg,var(--indigo),var(--cyan));
+  transition:width 0.45s cubic-bezier(0.16,1,0.3,1);
+  border-radius:0 2px 2px 0;
+}
+
+/* ── Slide Counter ────────────────── */
+.slide-counter{
+  position:fixed;top:calc(12px + var(--sat));right:16px;
+  font-size:13px;font-weight:600;color:var(--text-med);
+  background:var(--dark2);padding:6px 14px;border-radius:20px;
+  border:1px solid var(--dark3);z-index:100;
+}
+
+/* ── Back button ──────────────────── */
+.back-btn{
+  position:fixed;top:calc(12px + var(--sat));left:16px;
+  font-size:13px;font-weight:600;color:var(--text-med);
+  background:var(--dark2);padding:6px 14px;border-radius:20px;
+  border:1px solid var(--dark3);z-index:100;cursor:pointer;
+  transition:all 0.2s;
+}
+.back-btn:hover{border-color:var(--indigo);color:var(--white)}
+
+/* ── Idea Card ────────────────────── */
+.idea-card{
+  width:100%;max-width:480px;
+  background:var(--dark2);
+  border:1px solid var(--dark3);
+  border-radius:var(--radius);
+  padding:32px 28px;
+  position:relative;overflow:hidden;
+  transition:border-color 0.3s;
+}
+.idea-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:4px;
+  background:linear-gradient(90deg,var(--indigo),var(--cyan));
+}
+
+.idea-emoji{font-size:48px;margin-bottom:16px;display:block}
+.idea-title{
+  font-size:1.6rem;font-weight:800;color:var(--white);
+  margin-bottom:8px;line-height:1.2;
+}
+.idea-tagline{
+  font-size:1rem;color:var(--cyan-lt);font-weight:500;
+  margin-bottom:24px;line-height:1.5;
+  font-style:italic;
+}
+
+/* ── Features ─────────────────────── */
+.features-list{list-style:none;margin-bottom:28px}
+.features-list li{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:10px 0;
+  border-bottom:1px solid rgba(51,65,85,0.5);
+  font-size:0.95rem;color:var(--text);line-height:1.5;
+}
+.features-list li:last-child{border-bottom:none}
+.feat-icon{
+  flex-shrink:0;width:28px;height:28px;
+  border-radius:8px;display:flex;align-items:center;justify-content:center;
+  font-size:14px;margin-top:2px;
+}
+.feat-icon.indigo{background:rgba(99,102,241,0.15);color:var(--indigo-lt)}
+.feat-icon.cyan{background:rgba(6,182,212,0.15);color:var(--cyan-lt)}
+.feat-icon.green{background:rgba(16,185,129,0.15);color:var(--green-lt)}
+.feat-icon.orange{background:rgba(245,158,11,0.15);color:var(--orange)}
+
+/* ── Reaction Buttons ─────────────── */
+.reaction-row{
+  display:flex;gap:10px;width:100%;
+}
+.react-btn{
+  flex:1;padding:14px 8px;border-radius:var(--radius-sm);
+  border:2px solid var(--dark3);background:transparent;
+  color:var(--text);font-size:14px;font-weight:600;
+  cursor:pointer;transition:all 0.2s;
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+}
+.react-btn .react-emoji{font-size:22px}
+.react-btn:hover{border-color:var(--indigo);background:rgba(99,102,241,0.08)}
+.react-btn.selected{
+  border-color:var(--indigo);
+  background:rgba(99,102,241,0.15);
+  color:var(--white);
+}
+.react-btn.selected.love{border-color:var(--green);background:rgba(16,185,129,0.15)}
+.react-btn.selected.meh{border-color:var(--orange);background:rgba(245,158,11,0.15)}
+.react-btn.selected.nope{border-color:var(--red);background:rgba(239,68,68,0.15)}
+
+/* ── Navigation ───────────────────── */
+.nav-row{
+  display:flex;gap:12px;margin-top:20px;width:100%;max-width:480px;
+}
+.nav-btn{
+  flex:1;padding:14px;border-radius:var(--radius-sm);
+  border:none;font-size:15px;font-weight:700;
+  cursor:pointer;transition:all 0.2s;
+}
+.nav-prev{background:var(--dark3);color:var(--text)}
+.nav-prev:hover{background:var(--dark4)}
+.nav-next{
+  background:linear-gradient(135deg,var(--indigo),var(--cyan));
+  color:var(--white);
+}
+.nav-next:hover{opacity:0.9;transform:translateY(-1px)}
+.nav-next:disabled{opacity:0.4;cursor:not-allowed;transform:none}
+
+/* ── Intro Slide ──────────────────── */
+.intro-card{
+  width:100%;max-width:480px;text-align:center;
+}
+.intro-card h1{
+  font-size:2rem;font-weight:800;color:var(--white);
+  margin-bottom:12px;line-height:1.2;
+}
+.intro-card h1 span{
+  background:linear-gradient(135deg,var(--indigo),var(--cyan));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.intro-card p{
+  font-size:1rem;color:var(--text-med);line-height:1.6;
+  margin-bottom:32px;max-width:380px;margin-left:auto;margin-right:auto;
+}
+.intro-card .start-btn{
+  display:inline-block;padding:16px 40px;border-radius:var(--radius-sm);
+  background:linear-gradient(135deg,var(--indigo),var(--cyan));
+  color:var(--white);font-size:16px;font-weight:700;
+  border:none;cursor:pointer;transition:all 0.2s;
+}
+.intro-card .start-btn:hover{opacity:0.9;transform:translateY(-2px)}
+
+/* ── Results Slide ────────────────── */
+.results-card{
+  width:100%;max-width:520px;
+  background:var(--dark2);border:1px solid var(--dark3);
+  border-radius:var(--radius);padding:32px 28px;
+  text-align:center;
+}
+.results-card h2{
+  font-size:1.5rem;font-weight:800;color:var(--white);margin-bottom:8px;
+}
+.results-card .subtitle{
+  font-size:0.95rem;color:var(--text-med);margin-bottom:28px;
+}
+.result-bars{margin-bottom:28px;text-align:left}
+.result-item{margin-bottom:16px}
+.result-header{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:6px;
+}
+.result-name{font-size:14px;font-weight:600;color:var(--white)}
+.result-reaction{font-size:13px;color:var(--text-med)}
+.result-bar-bg{
+  height:8px;background:var(--dark3);border-radius:4px;overflow:hidden;
+}
+.result-bar-fill{
+  height:100%;border-radius:4px;
+  transition:width 0.8s cubic-bezier(0.16,1,0.3,1);
+}
+.result-bar-fill.love{background:var(--green)}
+.result-bar-fill.interested{background:var(--indigo)}
+.result-bar-fill.meh{background:var(--orange)}
+.result-bar-fill.nope{background:var(--red)}
+
+/* ── Feedback Form ────────────────── */
+.feedback-section{
+  margin-top:24px;text-align:left;width:100%;
+}
+.feedback-section label{
+  display:block;font-size:13px;font-weight:600;
+  color:var(--text-med);margin-bottom:8px;text-transform:uppercase;
+  letter-spacing:0.05em;
+}
+.feedback-input{
+  width:100%;background:var(--dark);border:1px solid var(--dark3);
+  border-radius:var(--radius-sm);padding:14px 16px;
+  color:var(--white);font-size:15px;font-family:inherit;
+  resize:vertical;min-height:80px;outline:none;
+  transition:border-color 0.2s;
+}
+.feedback-input:focus{border-color:var(--indigo)}
+.feedback-input::placeholder{color:var(--dark4)}
+
+.submit-btn{
+  display:block;width:100%;margin-top:16px;padding:16px;
+  border-radius:var(--radius-sm);border:none;
+  background:linear-gradient(135deg,var(--indigo),var(--cyan));
+  color:var(--white);font-size:16px;font-weight:700;
+  cursor:pointer;transition:all 0.2s;
+}
+.submit-btn:hover{opacity:0.9;transform:translateY(-1px)}
+
+/* ── Thank You ────────────────────── */
+.thankyou{text-align:center;padding:40px 20px}
+.thankyou .big-emoji{font-size:64px;margin-bottom:16px;display:block}
+.thankyou h2{font-size:1.6rem;font-weight:800;color:var(--white);margin-bottom:12px}
+.thankyou p{font-size:1rem;color:var(--text-med);line-height:1.6;max-width:360px;margin:0 auto 24px}
+.thankyou a{
+  display:inline-block;padding:14px 32px;border-radius:var(--radius-sm);
+  background:var(--indigo);color:var(--white);
+  font-weight:700;text-decoration:none;transition:all 0.2s;
+}
+.thankyou a:hover{background:var(--indigo-dk)}
+
+/* ── Mobile ───────────────────────── */
+@media(max-width:480px){
+  .idea-card{padding:24px 20px}
+  .idea-title{font-size:1.35rem}
+  .idea-tagline{font-size:0.9rem}
+  .features-list li{font-size:0.88rem}
+  .intro-card h1{font-size:1.6rem}
+  .reaction-row{gap:6px}
+  .react-btn{padding:12px 4px;font-size:12px}
+}
+
+/* ── Touch swipe hint ─────────────── */
+.swipe-hint{
+  position:fixed;bottom:calc(20px + var(--sab));left:50%;
+  transform:translateX(-50%);
+  font-size:12px;color:var(--dark4);
+  animation:fadeOut 3s 2s forwards;
+}
+@keyframes fadeOut{to{opacity:0}}
+</style>
+</head>
+<body>
+
+<!-- Progress -->
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+<div class="slide-counter" id="slideCounter">1 / 7</div>
+<div class="back-btn" id="backBtn" style="display:none" onclick="prevSlide()">&#8592; Back</div>
+
+<!-- Slide Track -->
+<div class="slide-viewport">
+  <div class="slide-track" id="slideTrack">
+
+    <!-- ═══ SLIDE 0: Intro ═══ -->
+    <div class="slide">
+      <div class="intro-card">
+        <div style="font-size:56px;margin-bottom:20px">&#128161;</div>
+        <h1>Which Idea <span>Excites You?</span></h1>
+        <p>We're exploring a few different directions and want your honest reaction. Swipe through each concept, tell us what you think, and help us build something people actually want.</p>
+        <button class="start-btn" onclick="nextSlide()">Let's Go &#8594;</button>
+      </div>
+    </div>
+
+    <!-- ═══ SLIDE 1: Idea A ═══ -->
+    <div class="slide">
+      <div class="idea-card">
+        <span class="idea-emoji">&#128640;</span>
+        <div class="idea-title">LaunchPad AI</div>
+        <div class="idea-tagline">"Turn any napkin idea into a testable business model in 60 seconds with AI."</div>
+        <ul class="features-list">
+          <li><span class="feat-icon indigo">&#9889;</span> AI-generated business model canvas from a one-sentence description</li>
+          <li><span class="feat-icon cyan">&#127919;</span> Instant competitor analysis and market sizing pulled from live data</li>
+          <li><span class="feat-icon green">&#128202;</span> Auto-generated pitch deck with financials and go-to-market strategy</li>
+          <li><span class="feat-icon orange">&#128101;</span> One-click sharing with co-founders, mentors, and potential investors</li>
+        </ul>
+        <div class="reaction-row">
+          <button class="react-btn" onclick="react(1,'love',this)" data-reaction="love">
+            <span class="react-emoji">&#128525;</span> Love it
+          </button>
+          <button class="react-btn" onclick="react(1,'interested',this)" data-reaction="interested">
+            <span class="react-emoji">&#129300;</span> Interesting
+          </button>
+          <button class="react-btn" onclick="react(1,'meh',this)" data-reaction="meh">
+            <span class="react-emoji">&#128528;</span> Meh
+          </button>
+          <button class="react-btn" onclick="react(1,'nope',this)" data-reaction="nope">
+            <span class="react-emoji">&#128078;</span> Not for me
+          </button>
+        </div>
+      </div>
+      <div class="nav-row">
+        <button class="nav-btn nav-prev" onclick="prevSlide()">&#8592; Back</button>
+        <button class="nav-btn nav-next" id="nav1" onclick="nextSlide()" disabled>Next &#8594;</button>
+      </div>
+    </div>
+
+    <!-- ═══ SLIDE 2: Idea B ═══ -->
+    <div class="slide">
+      <div class="idea-card">
+        <span class="idea-emoji">&#128176;</span>
+        <div class="idea-title">SplitTest Market</div>
+        <div class="idea-tagline">"A/B test your product ideas with real consumers before writing a single line of code."</div>
+        <ul class="features-list">
+          <li><span class="feat-icon indigo">&#127912;</span> Create mock landing pages for two versions of your idea in minutes</li>
+          <li><span class="feat-icon cyan">&#128200;</span> Real traffic from targeted demographics — see which version gets more signups</li>
+          <li><span class="feat-icon green">&#128172;</span> Embedded feedback forms capture qualitative insights alongside the data</li>
+          <li><span class="feat-icon orange">&#128640;</span> Statistical confidence scoring tells you when you have enough data to decide</li>
+        </ul>
+        <div class="reaction-row">
+          <button class="react-btn" onclick="react(2,'love',this)" data-reaction="love">
+            <span class="react-emoji">&#128525;</span> Love it
+          </button>
+          <button class="react-btn" onclick="react(2,'interested',this)" data-reaction="interested">
+            <span class="react-emoji">&#129300;</span> Interesting
+          </button>
+          <button class="react-btn" onclick="react(2,'meh',this)" data-reaction="meh">
+            <span class="react-emoji">&#128528;</span> Meh
+          </button>
+          <button class="react-btn" onclick="react(2,'nope',this)" data-reaction="nope">
+            <span class="react-emoji">&#128078;</span> Not for me
+          </button>
+        </div>
+      </div>
+      <div class="nav-row">
+        <button class="nav-btn nav-prev" onclick="prevSlide()">&#8592; Back</button>
+        <button class="nav-btn nav-next" id="nav2" onclick="nextSlide()" disabled>Next &#8594;</button>
+      </div>
+    </div>
+
+    <!-- ═══ SLIDE 3: Idea C ═══ -->
+    <div class="slide">
+      <div class="idea-card">
+        <span class="idea-emoji">&#127891;</span>
+        <div class="idea-title">Campus Pulse</div>
+        <div class="idea-tagline">"Tap into what college students actually think — a live focus group in your pocket."</div>
+        <ul class="features-list">
+          <li><span class="feat-icon indigo">&#128241;</span> Post a question and get 100+ responses from verified students within 24 hours</li>
+          <li><span class="feat-icon cyan">&#127919;</span> Filter by school, major, age, spending habits, and interests</li>
+          <li><span class="feat-icon green">&#129302;</span> AI-powered sentiment analysis turns raw answers into actionable themes</li>
+          <li><span class="feat-icon orange">&#128279;</span> Recruit participants for follow-up interviews, beta tests, or paid studies</li>
+        </ul>
+        <div class="reaction-row">
+          <button class="react-btn" onclick="react(3,'love',this)" data-reaction="love">
+            <span class="react-emoji">&#128525;</span> Love it
+          </button>
+          <button class="react-btn" onclick="react(3,'interested',this)" data-reaction="interested">
+            <span class="react-emoji">&#129300;</span> Interesting
+          </button>
+          <button class="react-btn" onclick="react(3,'meh',this)" data-reaction="meh">
+            <span class="react-emoji">&#128528;</span> Meh
+          </button>
+          <button class="react-btn" onclick="react(3,'nope',this)" data-reaction="nope">
+            <span class="react-emoji">&#128078;</span> Not for me
+          </button>
+        </div>
+      </div>
+      <div class="nav-row">
+        <button class="nav-btn nav-prev" onclick="prevSlide()">&#8592; Back</button>
+        <button class="nav-btn nav-next" id="nav3" onclick="nextSlide()" disabled>Next &#8594;</button>
+      </div>
+    </div>
+
+    <!-- ═══ SLIDE 4: Idea D ═══ -->
+    <div class="slide">
+      <div class="idea-card">
+        <span class="idea-emoji">&#128142;</span>
+        <div class="idea-title">Founder Match</div>
+        <div class="idea-tagline">"Find your perfect co-founder based on skills, vision, and working style — not just a LinkedIn profile."</div>
+        <ul class="features-list">
+          <li><span class="feat-icon indigo">&#129309;</span> Personality and workstyle matching powered by behavioral assessments</li>
+          <li><span class="feat-icon cyan">&#128736;</span> Skill-gap analysis shows you exactly what your team is missing</li>
+          <li><span class="feat-icon green">&#128100;</span> Trial project mode — work on a micro-challenge together before committing</li>
+          <li><span class="feat-icon orange">&#128220;</span> Built-in equity split calculator and co-founder agreement templates</li>
+        </ul>
+        <div class="reaction-row">
+          <button class="react-btn" onclick="react(4,'love',this)" data-reaction="love">
+            <span class="react-emoji">&#128525;</span> Love it
+          </button>
+          <button class="react-btn" onclick="react(4,'interested',this)" data-reaction="interested">
+            <span class="react-emoji">&#129300;</span> Interesting
+          </button>
+          <button class="react-btn" onclick="react(4,'meh',this)" data-reaction="meh">
+            <span class="react-emoji">&#128528;</span> Meh
+          </button>
+          <button class="react-btn" onclick="react(4,'nope',this)" data-reaction="nope">
+            <span class="react-emoji">&#128078;</span> Not for me
+          </button>
+        </div>
+      </div>
+      <div class="nav-row">
+        <button class="nav-btn nav-prev" onclick="prevSlide()">&#8592; Back</button>
+        <button class="nav-btn nav-next" id="nav4" onclick="nextSlide()" disabled>Next &#8594;</button>
+      </div>
+    </div>
+
+    <!-- ═══ SLIDE 5: Idea E ═══ -->
+    <div class="slide">
+      <div class="idea-card">
+        <span class="idea-emoji">&#128640;</span>
+        <div class="idea-title">TractionBoard</div>
+        <div class="idea-tagline">"Track your startup's riskiest assumptions like a scoreboard — kill bad ideas fast, double down on winners."</div>
+        <ul class="features-list">
+          <li><span class="feat-icon indigo">&#9989;</span> Kanban-style board where each card is a hypothesis with a pass/fail threshold</li>
+          <li><span class="feat-icon cyan">&#128202;</span> Attach real experiment data — surveys, ad results, prototype metrics — to each card</li>
+          <li><span class="feat-icon green">&#128276;</span> Weekly nudges remind you to update evidence so assumptions don't go stale</li>
+          <li><span class="feat-icon orange">&#128101;</span> Shareable investor view shows traction and validated learning at a glance</li>
+        </ul>
+        <div class="reaction-row">
+          <button class="react-btn" onclick="react(5,'love',this)" data-reaction="love">
+            <span class="react-emoji">&#128525;</span> Love it
+          </button>
+          <button class="react-btn" onclick="react(5,'interested',this)" data-reaction="interested">
+            <span class="react-emoji">&#129300;</span> Interesting
+          </button>
+          <button class="react-btn" onclick="react(5,'meh',this)" data-reaction="meh">
+            <span class="react-emoji">&#128528;</span> Meh
+          </button>
+          <button class="react-btn" onclick="react(5,'nope',this)" data-reaction="nope">
+            <span class="react-emoji">&#128078;</span> Not for me
+          </button>
+        </div>
+      </div>
+      <div class="nav-row">
+        <button class="nav-btn nav-prev" onclick="prevSlide()">&#8592; Back</button>
+        <button class="nav-btn nav-next" id="nav5" onclick="nextSlide()" disabled>See Results &#8594;</button>
+      </div>
+    </div>
+
+    <!-- ═══ SLIDE 6: Results + Feedback ═══ -->
+    <div class="slide">
+      <div class="results-card" id="resultsCard">
+        <h2>Your Reactions</h2>
+        <p class="subtitle">Here's how you felt about each idea.</p>
+        <div class="result-bars" id="resultBars"></div>
+
+        <div class="feedback-section">
+          <label for="feedbackText">Anything else you'd want us to know?</label>
+          <textarea class="feedback-input" id="feedbackText" placeholder="Which idea excited you most? What's missing? What would you actually pay for?"></textarea>
+          <button class="submit-btn" onclick="submitFeedback()">Submit Feedback &#127881;</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ SLIDE 7: Thank You ═══ -->
+    <div class="slide">
+      <div class="thankyou">
+        <span class="big-emoji">&#127881;</span>
+        <h2>Thanks for your input!</h2>
+        <p>Your honest reactions help us build something people actually want. That's the whole point.</p>
+        <a href="./app.html">Open ValidX App &#8594;</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="swipe-hint" id="swipeHint">Swipe or use buttons to navigate</div>
+
+<script>
+// ── State ──────────────────────────
+const TOTAL_IDEAS = 5;
+const TOTAL_SLIDES = TOTAL_IDEAS + 3; // intro + ideas + results + thanks
+let current = 0;
+const reactions = {};
+
+const IDEAS = [
+  { id: 1, name: 'LaunchPad AI' },
+  { id: 2, name: 'SplitTest Market' },
+  { id: 3, name: 'Campus Pulse' },
+  { id: 4, name: 'Founder Match' },
+  { id: 5, name: 'TractionBoard' },
+];
+
+const REACTION_LABELS = {
+  love: '&#128525; Love it',
+  interested: '&#129300; Interesting',
+  meh: '&#128528; Meh',
+  nope: '&#128078; Not for me',
+};
+
+// ── Navigation ─────────────────────
+function goToSlide(n) {
+  if (n < 0 || n >= TOTAL_SLIDES) return;
+  current = n;
+  document.getElementById('slideTrack').style.transform = `translateX(-${current * 100}%)`;
+  updateUI();
+}
+function nextSlide() { goToSlide(current + 1); }
+function prevSlide() { goToSlide(current - 1); }
+
+function updateUI() {
+  // Progress
+  const pct = ((current) / (TOTAL_SLIDES - 1)) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+
+  // Counter
+  document.getElementById('slideCounter').textContent = `${current + 1} / ${TOTAL_SLIDES}`;
+
+  // Back button
+  document.getElementById('backBtn').style.display = current > 0 && current < TOTAL_SLIDES - 1 ? 'block' : 'none';
+
+  // Build results if on results slide
+  if (current === TOTAL_IDEAS + 1) buildResults();
+}
+
+// ── Reactions ──────────────────────
+function react(ideaId, reaction, btn) {
+  reactions[ideaId] = reaction;
+
+  // Update button states
+  const row = btn.parentElement;
+  row.querySelectorAll('.react-btn').forEach(b => {
+    b.classList.remove('selected', 'love', 'meh', 'nope');
+  });
+  btn.classList.add('selected', reaction);
+
+  // Enable next button
+  const navBtn = document.getElementById('nav' + ideaId);
+  if (navBtn) navBtn.disabled = false;
+}
+
+// ── Results ────────────────────────
+function buildResults() {
+  const container = document.getElementById('resultBars');
+  container.innerHTML = '';
+
+  const reactionColors = { love: 'love', interested: 'interested', meh: 'meh', nope: 'nope' };
+  const reactionWidths = { love: 100, interested: 70, meh: 40, nope: 15 };
+
+  for (const idea of IDEAS) {
+    const r = reactions[idea.id] || 'nope';
+    const div = document.createElement('div');
+    div.className = 'result-item';
+    div.innerHTML = `
+      <div class="result-header">
+        <span class="result-name">${idea.name}</span>
+        <span class="result-reaction">${REACTION_LABELS[r] || r}</span>
+      </div>
+      <div class="result-bar-bg">
+        <div class="result-bar-fill ${reactionColors[r]}" style="width:0%"></div>
+      </div>
+    `;
+    container.appendChild(div);
+
+    // Animate bar
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        div.querySelector('.result-bar-fill').style.width = reactionWidths[r] + '%';
+      });
+    });
+  }
+}
+
+// ── Submit ─────────────────────────
+function submitFeedback() {
+  const feedback = document.getElementById('feedbackText').value.trim();
+  const payload = {
+    reactions,
+    feedback,
+    timestamp: new Date().toISOString(),
+    userAgent: navigator.userAgent,
+  };
+
+  // Store locally
+  const existing = JSON.parse(localStorage.getItem('vx_momtest') || '[]');
+  existing.push(payload);
+  localStorage.setItem('vx_momtest', JSON.stringify(existing));
+
+  // If backend is available, try sending
+  fetch('/api/momtest', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  }).catch(() => { /* offline or no backend — that's fine, saved locally */ });
+
+  console.log('Mom Test Response:', payload);
+  nextSlide();
+}
+
+// ── Touch swipe ────────────────────
+let touchStartX = 0;
+let touchEndX = 0;
+const viewport = document.querySelector('.slide-viewport');
+
+viewport.addEventListener('touchstart', e => {
+  touchStartX = e.changedTouches[0].screenX;
+}, { passive: true });
+
+viewport.addEventListener('touchend', e => {
+  touchEndX = e.changedTouches[0].screenX;
+  const diff = touchStartX - touchEndX;
+  if (Math.abs(diff) > 60) {
+    if (diff > 0) {
+      // Swiped left → next (only if reaction selected for idea slides)
+      const isIdeaSlide = current >= 1 && current <= TOTAL_IDEAS;
+      if (isIdeaSlide && !reactions[current]) return;
+      nextSlide();
+    } else {
+      prevSlide();
+    }
+  }
+}, { passive: true });
+
+// ── Keyboard nav ───────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') {
+    e.preventDefault();
+    const isIdeaSlide = current >= 1 && current <= TOTAL_IDEAS;
+    if (isIdeaSlide && !reactions[current]) return;
+    nextSlide();
+  }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
+});
+
+// ── Init ───────────────────────────
+updateUI();
+</script>
+</body>
+</html>

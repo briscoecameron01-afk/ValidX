@@ -31,7 +31,7 @@ const TIERS = [
     id: 'quick-test',
     name: 'Quick Test',
     description: '10 real college-age testers evaluate your idea in 48 hours. Get quick validation before you invest more.',
-    price: 2900,       // $29.00 in cents
+    price: 25000,      // $250.00 in cents
     features: [
       '10 targeted testers',
       '48-hour turnaround',
@@ -48,7 +48,7 @@ const TIERS = [
     id: 'deep-dive',
     name: 'Deep Dive',
     description: '25 testers with focus group-style feedback. Detailed analysis of your product-market fit.',
-    price: 8900,       // $89.00 in cents
+    price: 50000,      // $500.00 in cents
     features: [
       '25 targeted testers',
       '5-day turnaround',
@@ -66,7 +66,7 @@ const TIERS = [
     id: 'full-study',
     name: 'Full Study',
     description: '50 testers in a comprehensive validation study. Complete market analysis and actionable recommendations.',
-    price: 25000,      // $250.00 in cents
+    price: 75000,      // $750.00 in cents
     features: [
       '50 targeted testers',
       '7-day turnaround',

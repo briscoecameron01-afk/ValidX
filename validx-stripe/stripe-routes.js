@@ -217,7 +217,7 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
 // ══════════════════════════════════════════════════
 // POST /api/stripe/refund
 // Refund a payment
-// Body: { paymentIntentId: 'pi_xxx', amount?: 2900 }
+// Body: { paymentIntentId: 'pi_xxx', amount?: 25000 }
 // ══════════════════════════════════════════════════
 router.post('/refund', requireStripe, async (req, res) => {
   try {

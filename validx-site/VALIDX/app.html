@@ -551,9 +551,9 @@ const SEED_EXPERIMENTS = [
 ];
 
 const TIER_INFO = {
-  "quick-test": { name: "Quick Test", price: 29, reach: 10 },
-  "deep-dive": { name: "Deep Dive", price: 89, reach: 25 },
-  "full-study": { name: "Full Study", price: 250, reach: 50 },
+  "quick-test": { name: "Quick Test", price: 250, reach: 10 },
+  "deep-dive": { name: "Deep Dive", price: 500, reach: 25 },
+  "full-study": { name: "Full Study", price: 750, reach: 50 },
 };
 
 // ═══════════════════════════════════════════════════
@@ -700,7 +700,7 @@ function Onboarding({ onDone }) {
   const slides = [
     { emoji: "🎯", title: "Test Before You Build", desc: "Validate your riskiest business assumptions in days — not months. No more guessing." },
     { emoji: "🌐", title: "Real Market Data", desc: "Tap into a live network of college student testers who represent the next generation of consumers." },
-    { emoji: "💰", title: "Pay Per Test", desc: "Starting at just $29. No subscriptions, no contracts. Get actionable insights fast." },
+    { emoji: "💰", title: "Pay Per Test", desc: "Starting at just $250. No subscriptions, no contracts. Get actionable insights fast." },
   ];
   const current = slides[step];
   const next = () => { haptic(); step === slides.length - 1 ? onDone() : setStep(step + 1); };

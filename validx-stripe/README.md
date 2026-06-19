@@ -40,9 +40,9 @@ node setup-stripe.js sk_test_YOUR_KEY_HERE
 This creates:
 | Product | Price | What it does |
 |---------|-------|-------------|
-| Quick Test | $29 | 10 testers, 48hr turnaround |
-| Deep Dive | $89 | 25 testers, focus groups |
-| Full Study | $250 | 50 testers, full analysis |
+| Quick Test | $250 | 10 testers, 48hr turnaround |
+| Deep Dive | $500 | 25 testers, focus groups |
+| Full Study | $750 | 50 testers, full analysis |
 
 The script prints your three payment links. Share them anywhere — email, website, social media. Customers click, pay, done.
 
