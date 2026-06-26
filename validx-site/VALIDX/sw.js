@@ -57,6 +57,12 @@ self.addEventListener('fetch', event => {
     return;
   }
 
+  // API calls must go straight to the network. This keeps auth/profile
+  // responses out of static caches when the UI is deployed on Vercel.
+  if (url.pathname.startsWith('/api/')) {
+    return;
+  }
+
   // HTML documents: network-first, fall back to cache, then offline page
   if (request.mode === 'navigate' || request.destination === 'document') {
     event.respondWith(networkFirstPage(request));

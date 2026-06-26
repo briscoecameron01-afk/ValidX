@@ -9,11 +9,11 @@
 <meta name="color-scheme" content="dark">
 
 <!-- PWA -->
-<link rel="manifest" href="./manifest.json">
-<link rel="icon" href="./icons/favicon.ico" sizes="any">
-<link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="./icons/favicon-16.png">
-<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icons/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ValidX">
@@ -23,12 +23,12 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="ValidX — Test Your Riskiest Assumptions in Real Time">
 <meta property="og:description" content="The Uber-style marketplace that connects startups to real testers. Launch validation experiments starting at $29.">
-<meta property="og:image" content="./icons/icon-512.png">
+<meta property="og:image" content="/icons/icon-512.png">
 <meta property="og:url" content="https://validx.com/">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="ValidX — Test Your Riskiest Assumptions">
 <meta name="twitter:description" content="Launch validation experiments and get real market signals from real testers.">
-<meta name="twitter:image" content="./icons/icon-512.png">
+<meta name="twitter:image" content="/icons/icon-512.png">
 
 <!-- Preconnect for faster CDN loads on app launch -->
 <link rel="preconnect" href="https://unpkg.com">
@@ -580,7 +580,7 @@ document.querySelectorAll('.nav-links a').forEach(a => {
 // ── PWA: Service Worker Registration ──────────────
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').then(reg => {
+    navigator.serviceWorker.register('/sw.js').then(reg => {
       // Check for updates on each page load
       reg.update().catch(() => {});
       // If a waiting worker is found, activate it

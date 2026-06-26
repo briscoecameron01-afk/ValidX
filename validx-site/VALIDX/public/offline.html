@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0F172A">
+<title>Offline — ValidX</title>
+<link rel="icon" href="./icons/favicon.ico">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:-apple-system,'Segoe UI',system-ui,sans-serif;
+    background:radial-gradient(ellipse at top,#1e293b 0%,#0f172a 60%);
+    color:#e2e8f0;display:flex;align-items:center;justify-content:center;
+    padding:24px;min-height:100vh;min-height:100dvh;text-align:center;
+  }
+  .card{max-width:420px;animation:fadeUp .5s ease}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  .logo{
+    width:80px;height:80px;margin:0 auto 24px;border-radius:20px;
+    background:linear-gradient(135deg,#6366f1,#06b6d4);
+    display:flex;align-items:center;justify-content:center;
+    font-size:2rem;font-weight:800;color:#fff;
+    box-shadow:0 10px 40px rgba(99,102,241,.4);
+  }
+  h1{font-size:1.6rem;margin-bottom:10px;color:#fff}
+  p{color:#94a3b8;margin-bottom:24px;line-height:1.6}
+  button{
+    background:linear-gradient(135deg,#6366f1,#4f46e5);
+    color:#fff;border:none;padding:14px 28px;border-radius:10px;
+    font-size:1rem;font-weight:600;cursor:pointer;
+    box-shadow:0 8px 20px rgba(99,102,241,.3);
+    transition:transform .15s;min-height:48px;
+  }
+  button:active{transform:scale(.97)}
+  .dot{
+    display:inline-block;width:8px;height:8px;border-radius:50%;
+    background:#ef4444;margin-right:6px;animation:pulse 1.5s infinite;
+  }
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">VX</div>
+    <h1>You're offline</h1>
+    <p><span class="dot"></span>No internet connection. Any data you've already loaded is still available — just reconnect and try again.</p>
+    <button onclick="location.reload()">Retry</button>
+  </div>
+<script>
+  // Auto-retry when connection returns
+  window.addEventListener('online', () => location.reload());
+</script>
+</body>
+</html>

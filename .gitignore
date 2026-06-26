@@ -1,3 +1,9 @@
 /.idea/
 validx-backend/validx/.env
 /validx-backend/validx/node_modules/
+validx-backend/validx/*.db
+validx-backend/validx/*.db-shm
+validx-backend/validx/*.db-wal
+
+.vercel
+.env*

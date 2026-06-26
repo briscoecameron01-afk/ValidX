@@ -1,506 +1,5 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#0F172A">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="ValidX">
-<meta name="mobile-web-app-capable" content="yes">
-<link rel="manifest" href="./manifest.json">
-<link rel="icon" href="./icons/favicon.ico" sizes="any">
-<link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="./icons/favicon-16.png">
-<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
-<title>ValidX - Business Validation Platform</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<style>
-/* ═══════════════════════════════════════════════════
-   RESET & BASE
-   ═══════════════════════════════════════════════════ */
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-:root{
-  --dark:#0F172A;--dark2:#1E293B;--dark3:#334155;--dark4:#475569;
-  --indigo:#6366F1;--indigo-lt:#818CF8;--indigo-dk:#4F46E5;
-  --cyan:#06B6D4;--cyan-lt:#22D3EE;
-  --green:#10B981;--green-lt:#34D399;
-  --red:#EF4444;--orange:#F59E0B;
-  --light:#F1F5F9;--white:#FFF;
-  --text:#CBD5E1;--text-med:#94A3B8;--text-dark:#1E293B;
-  --radius:14px;--radius-sm:10px;--radius-xs:6px;
-  --sat:env(safe-area-inset-top,0px);
-  --sab:env(safe-area-inset-bottom,0px);
-  --sal:env(safe-area-inset-left,0px);
-  --sar:env(safe-area-inset-right,0px);
-  --topbar-h:54px;
-  --bottomnav-h:64px;
-  --dur:280ms;
-  --ease:cubic-bezier(0.4,0,0.2,1);
-  --ease-out:cubic-bezier(0.16,1,0.3,1);
-}
-html{height:100%;-webkit-text-size-adjust:100%;touch-action:manipulation;overscroll-behavior:none}
-body{
-  height:100%;
-  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
-  background:var(--dark);color:var(--text);
-  overflow:hidden;
-  overscroll-behavior:none;
-  -webkit-user-select:none;user-select:none;
-  -webkit-touch-callout:none;
-}
-#root{height:100%;position:relative}
-a{color:inherit;text-decoration:none}
-button{font-family:inherit;border:none;background:none;color:inherit;cursor:pointer;-webkit-appearance:none}
-input,textarea,select{font-family:inherit;-webkit-appearance:none;appearance:none;-webkit-user-select:text;user-select:text}
-
-/* iOS zoom prevention: all inputs 16px+ */
-input,textarea,select{font-size:16px !important}
-
-/* ═══════════════════════════════════════════════════
-   APP SHELL
-   ═══════════════════════════════════════════════════ */
-.app{display:flex;flex-direction:column;height:100%;overflow:hidden;position:relative;background:var(--dark)}
-
-/* ── Top Bar ── */
-.topbar{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:calc(var(--sat) + 10px) calc(var(--sar) + 16px) 10px calc(var(--sal) + 16px);
-  background:rgba(15,23,42,.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
-  border-bottom:1px solid rgba(51,65,85,.5);
-  flex-shrink:0;position:relative;z-index:10;min-height:calc(var(--sat) + var(--topbar-h));
-}
-.topbar .logo{font-size:1.3rem;font-weight:800;letter-spacing:-0.5px;color:var(--white)}
-.topbar .logo span{color:var(--cyan)}
-.topbar-right{display:flex;align-items:center;gap:10px}
-.topbar-role{font-size:.7rem;padding:5px 11px;border-radius:20px;font-weight:700;letter-spacing:.3px}
-.topbar-role.business{background:rgba(99,102,241,.18);color:var(--indigo-lt)}
-.topbar-role.tester{background:rgba(6,182,212,.18);color:var(--cyan-lt)}
-.topbar-btn{
-  background:rgba(51,65,85,.5);color:var(--text);
-  padding:7px 13px;border-radius:20px;font-size:.75rem;font-weight:600;
-  transition:transform .1s;
-}
-.topbar-btn:active{transform:scale(.94)}
-
-/* ── Main Scroll Area ── */
-.main{
-  flex:1;overflow-y:auto;overflow-x:hidden;
-  padding:16px calc(var(--sar) + 16px) 16px calc(var(--sal) + 16px);
-  -webkit-overflow-scrolling:touch;
-  overscroll-behavior-y:contain;
-  position:relative;
-}
-.main::-webkit-scrollbar{display:none}
-
-/* ── Page Transitions ── */
-.page{animation:pageIn var(--dur) var(--ease-out)}
-@keyframes pageIn{
-  from{opacity:0;transform:translateX(16px)}
-  to{opacity:1;transform:translateX(0)}
-}
-.page-back{animation:pageBack var(--dur) var(--ease-out)}
-@keyframes pageBack{
-  from{opacity:0;transform:translateX(-16px)}
-  to{opacity:1;transform:translateX(0)}
-}
-
-/* ── Bottom Nav ── */
-.bottom-nav{
-  display:flex;
-  background:rgba(15,23,42,.95);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
-  border-top:1px solid rgba(51,65,85,.5);
-  flex-shrink:0;
-  padding:6px calc(var(--sar) + 4px) calc(var(--sab) + 6px) calc(var(--sal) + 4px);
-  position:relative;z-index:10;
-}
-.nav-item{
-  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:8px 4px;font-size:.66rem;font-weight:600;color:var(--text-med);
-  gap:4px;transition:color .2s,transform .1s;
-  min-height:48px;border-radius:var(--radius-sm);
-}
-.nav-item .icon{font-size:1.4rem;line-height:1;transition:transform .2s}
-.nav-item:active{transform:scale(.92)}
-.nav-item.active{color:var(--cyan)}
-.nav-item.active .icon{transform:scale(1.1)}
-
-/* ═══════════════════════════════════════════════════
-   CARDS
-   ═══════════════════════════════════════════════════ */
-.card{
-  background:var(--dark2);border:1px solid rgba(51,65,85,.6);border-radius:var(--radius);
-  padding:18px;margin-bottom:14px;transition:transform .15s,border-color .2s;
-}
-.card.tappable{cursor:pointer}
-.card.tappable:active{transform:scale(.985);border-color:var(--indigo)}
-.card-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:10px}
-.card h3{font-size:1rem;font-weight:700;color:var(--white);margin-bottom:4px;line-height:1.3}
-.card p{font-size:.85rem;color:var(--text-med);line-height:1.5}
-
-/* ═══════════════════════════════════════════════════
-   BADGES
-   ═══════════════════════════════════════════════════ */
-.badge{display:inline-flex;align-items:center;padding:4px 11px;border-radius:20px;font-size:.68rem;font-weight:700;letter-spacing:.3px;text-transform:uppercase;white-space:nowrap}
-.badge-active{background:rgba(16,185,129,.16);color:var(--green-lt)}
-.badge-pending{background:rgba(245,158,11,.16);color:var(--orange)}
-.badge-completed{background:rgba(99,102,241,.16);color:var(--indigo-lt)}
-.badge-draft{background:rgba(148,163,184,.16);color:var(--text-med)}
-.badge-budget{background:rgba(6,182,212,.14);color:var(--cyan)}
-
-/* ═══════════════════════════════════════════════════
-   BUTTONS (min 44px for touch targets)
-   ═══════════════════════════════════════════════════ */
-.btn{
-  display:inline-flex;align-items:center;justify-content:center;gap:6px;
-  padding:13px 22px;min-height:46px;
-  border-radius:var(--radius-sm);font-weight:700;font-size:.92rem;
-  transition:transform .1s,background .2s;
-  touch-action:manipulation;
-}
-.btn:active{transform:scale(.96)}
-.btn:disabled{opacity:.45;pointer-events:none}
-.btn-primary{background:var(--indigo);color:var(--white)}
-.btn-primary:active{background:var(--indigo-dk)}
-.btn-cyan{background:var(--cyan);color:var(--dark)}
-.btn-green{background:var(--green);color:var(--white)}
-.btn-outline{background:transparent;border:1.5px solid var(--dark3);color:var(--text)}
-.btn-outline:active{border-color:var(--indigo);color:var(--white)}
-.btn-ghost{background:rgba(51,65,85,.5);color:var(--text)}
-.btn-sm{padding:9px 16px;min-height:38px;font-size:.82rem}
-.btn-block{width:100%}
-.btn-lg{padding:16px 28px;min-height:54px;font-size:1rem}
-
-/* Floating Action Button */
-.fab{
-  position:absolute;bottom:calc(var(--bottomnav-h) + var(--sab) + 16px);right:calc(var(--sar) + 16px);
-  width:56px;height:56px;border-radius:50%;
-  background:var(--indigo);color:var(--white);
-  display:flex;align-items:center;justify-content:center;font-size:1.8rem;
-  box-shadow:0 8px 28px rgba(99,102,241,.45);
-  z-index:5;transition:transform .15s;
-}
-.fab:active{transform:scale(.9)}
-
-/* ═══════════════════════════════════════════════════
-   FORMS
-   ═══════════════════════════════════════════════════ */
-.form-group{margin-bottom:20px}
-.form-group label{display:block;font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:8px;letter-spacing:.2px}
-.form-group .hint{font-size:.76rem;color:var(--text-med);margin-top:6px;line-height:1.4}
-input[type="text"],input[type="number"],input[type="email"],input[type="password"],textarea,select{
-  width:100%;padding:14px 16px;border-radius:var(--radius-sm);
-  border:1.5px solid var(--dark3);background:var(--dark);color:var(--white);
-  font-size:16px;font-family:inherit;transition:border-color .2s;outline:none;
-}
-input:focus,textarea:focus,select:focus{border-color:var(--indigo)}
-.password-field{position:relative}
-.password-field input{padding-right:78px}
-.password-toggle{
-  position:absolute;right:8px;top:50%;transform:translateY(-50%);
-  min-height:34px;padding:0 10px;border-radius:var(--radius-xs);
-  background:rgba(51,65,85,.72);color:var(--text);
-  font-size:.76rem;font-weight:800;letter-spacing:.2px;
-}
-.password-toggle:active{transform:translateY(-50%) scale(.96);color:var(--white)}
-textarea{resize:none;min-height:110px;line-height:1.5}
-select{cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2394A3B8' d='M6 8L0 0h12z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;padding-right:40px}
-select option{background:var(--dark2);color:var(--white)}
-
-/* ═══════════════════════════════════════════════════
-   STATS
-   ═══════════════════════════════════════════════════ */
-.stats-row{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px}
-.stat-card{
-  background:var(--dark2);border:1px solid rgba(51,65,85,.5);
-  border-radius:var(--radius-sm);padding:14px 12px;text-align:center;
-}
-.stat-card .num{font-size:1.5rem;font-weight:800;color:var(--white);line-height:1.1}
-.stat-card .label{font-size:.7rem;color:var(--text-med);margin-top:4px;font-weight:500}
-
-/* ═══════════════════════════════════════════════════
-   FILE UPLOAD
-   ═══════════════════════════════════════════════════ */
-.upload-zone{
-  border:2px dashed var(--dark3);border-radius:var(--radius);
-  padding:28px 20px;text-align:center;position:relative;
-  background:rgba(30,41,59,.4);transition:all .2s;
-}
-.upload-zone:active{border-color:var(--indigo);background:rgba(99,102,241,.06)}
-.upload-zone .icon{font-size:2.2rem;margin-bottom:8px;opacity:.7}
-.upload-zone p{font-size:.88rem;color:var(--text-med);margin-bottom:2px}
-.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer}
-.file-list{margin-top:12px}
-.file-item{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:12px 14px;background:var(--dark);border:1px solid var(--dark3);
-  border-radius:var(--radius-sm);margin-bottom:8px;
-}
-.file-item .name{font-size:.86rem;color:var(--white);font-weight:500;word-break:break-all}
-.file-item .size{font-size:.72rem;color:var(--text-med);margin-top:2px}
-.file-item .remove{color:var(--red);font-size:1.4rem;padding:4px 10px;line-height:1;min-width:36px;min-height:36px;display:flex;align-items:center;justify-content:center}
-
-/* ═══════════════════════════════════════════════════
-   SPLASH SCREEN
-   ═══════════════════════════════════════════════════ */
-.splash{
-  position:fixed;inset:0;z-index:1000;
-  background:linear-gradient(135deg,var(--indigo-dk),var(--dark));
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  animation:splashFadeOut .5s ease .4s forwards;
-}
-.splash-logo{font-size:3.8rem;font-weight:800;color:var(--white);letter-spacing:-2px;animation:splashZoom .8s var(--ease-out)}
-.splash-logo span{color:var(--cyan)}
-.splash-tag{font-size:.9rem;color:rgba(255,255,255,.7);margin-top:6px;animation:splashFade .8s .1s both}
-.splash-spinner{width:32px;height:32px;border:3px solid rgba(255,255,255,.15);border-top-color:var(--cyan);border-radius:50%;margin-top:36px;animation:spin 1s linear infinite}
-@keyframes splashZoom{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
-@keyframes splashFade{from{opacity:0}to{opacity:1}}
-@keyframes splashFadeOut{to{opacity:0;visibility:hidden}}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-/* ═══════════════════════════════════════════════════
-   ONBOARDING
-   ═══════════════════════════════════════════════════ */
-.onboarding{
-  position:fixed;inset:0;z-index:900;
-  background:var(--dark);
-  display:flex;flex-direction:column;
-  padding:calc(var(--sat) + 20px) 24px calc(var(--sab) + 24px);
-}
-.onboarding-skip{align-self:flex-end;padding:10px 16px;color:var(--text-med);font-size:.88rem;font-weight:600}
-.onboarding-content{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 8px}
-.onboarding-emoji{font-size:5rem;margin-bottom:24px;animation:bounceIn .6s var(--ease-out)}
-.onboarding h1{font-size:1.9rem;font-weight:800;color:var(--white);margin-bottom:12px;line-height:1.2;animation:slideUp .5s .1s both}
-.onboarding p{font-size:1rem;color:var(--text-med);line-height:1.6;max-width:360px;animation:slideUp .5s .2s both}
-.onboarding-dots{display:flex;gap:8px;justify-content:center;margin:28px 0}
-.dot{width:8px;height:8px;border-radius:50%;background:var(--dark3);transition:all .3s}
-.dot.active{width:26px;background:var(--indigo)}
-@keyframes bounceIn{0%{transform:scale(.3);opacity:0}60%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
-@keyframes slideUp{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
-
-/* ═══════════════════════════════════════════════════
-   ROLE SELECT
-   ═══════════════════════════════════════════════════ */
-.role-select{
-  display:flex;flex-direction:column;height:100%;text-align:center;
-  padding:calc(var(--sat) + 40px) 24px calc(var(--sab) + 32px);
-  overflow-y:auto;
-}
-.role-select-logo{font-size:2.5rem;font-weight:800;color:var(--white);margin-bottom:6px;letter-spacing:-1px}
-.role-select-logo span{color:var(--cyan)}
-.role-select .sub{font-size:.95rem;color:var(--text-med);margin-bottom:36px;line-height:1.6}
-.role-cards{display:flex;flex-direction:column;gap:16px;flex:1}
-.role-card{
-  background:var(--dark2);border:2px solid var(--dark3);border-radius:var(--radius);
-  padding:28px 24px;text-align:left;transition:all .15s;
-  display:flex;align-items:center;gap:20px;
-}
-.role-card:active{transform:scale(.98);border-color:var(--indigo)}
-.role-card .emoji{font-size:2.4rem;flex-shrink:0}
-.role-card .content{flex:1}
-.role-card h2{font-size:1.1rem;font-weight:700;color:var(--white);margin-bottom:4px}
-.role-card p{font-size:.82rem;color:var(--text-med);line-height:1.5}
-.role-card .arrow{color:var(--text-med);font-size:1.4rem;flex-shrink:0}
-
-/* ═══════════════════════════════════════════════════
-   AUTH (LOGIN / REGISTER)
-   ═══════════════════════════════════════════════════ */
-.auth{
-  display:flex;flex-direction:column;min-height:100%;
-  padding:calc(var(--sat) + 20px) 24px calc(var(--sab) + 24px);
-  overflow-y:auto;animation:pageIn .3s var(--ease-out);
-}
-.auth-back{
-  align-self:flex-start;background:none;border:none;color:var(--text-med);
-  font-size:1rem;font-weight:600;padding:8px 4px;margin-bottom:8px;
-  min-height:40px;display:flex;align-items:center;gap:6px;
-}
-.auth-logo{font-size:1.8rem;font-weight:800;color:var(--white);letter-spacing:-.5px;margin-bottom:6px}
-.auth-logo span{color:var(--cyan)}
-.auth h1{font-size:1.7rem;font-weight:800;color:var(--white);margin-bottom:6px;line-height:1.25}
-.auth .auth-sub{font-size:.92rem;color:var(--text-med);margin-bottom:24px;line-height:1.5}
-.auth-role-pill{
-  display:inline-flex;align-items:center;gap:6px;padding:5px 12px;
-  background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.35);
-  border-radius:999px;font-size:.74rem;font-weight:700;color:var(--indigo-lt);
-  margin-bottom:14px;text-transform:uppercase;letter-spacing:.4px;
-}
-.google-btn{
-  display:flex;align-items:center;justify-content:center;gap:10px;
-  width:100%;padding:14px 18px;border-radius:var(--radius-sm);
-  background:var(--white);color:#1f2937;font-size:.98rem;font-weight:600;
-  border:1.5px solid #e5e7eb;min-height:52px;cursor:pointer;
-  transition:all .15s;box-shadow:0 2px 10px rgba(0,0,0,.15);
-}
-.google-btn:active{transform:scale(.98);background:#f9fafb}
-.google-btn svg{width:20px;height:20px;flex-shrink:0}
-.auth-divider{
-  display:flex;align-items:center;gap:12px;margin:22px 0;
-  color:var(--text-med);font-size:.78rem;font-weight:600;letter-spacing:.4px;
-}
-.auth-divider::before,.auth-divider::after{
-  content:'';flex:1;height:1px;background:var(--dark3);
-}
-.auth-fields{display:flex;flex-direction:column;gap:14px}
-.auth-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.auth .hint-sm{font-size:.72rem;color:var(--text-med);margin-top:4px;line-height:1.4}
-.auth-submit{margin-top:20px}
-.auth-switch{
-  text-align:center;margin-top:20px;font-size:.88rem;color:var(--text-med);
-}
-.auth-switch button{
-  background:none;border:none;color:var(--indigo-lt);font-weight:700;
-  cursor:pointer;padding:6px 4px;font-size:.88rem;
-}
-.auth-terms{
-  font-size:.72rem;color:var(--text-med);text-align:center;
-  margin-top:16px;line-height:1.5;
-}
-.auth-terms a{color:var(--indigo-lt);text-decoration:underline}
-.field-error{font-size:.74rem;color:#ef4444;margin-top:4px;font-weight:500}
-
-/* ═══════════════════════════════════════════════════
-   SECTION HEADERS
-   ═══════════════════════════════════════════════════ */
-.section-header{margin-bottom:18px;display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
-.section-title{font-size:1.6rem;font-weight:800;color:var(--white);letter-spacing:-.5px;line-height:1.1}
-.section-sub{font-size:.86rem;color:var(--text-med);margin-top:4px;line-height:1.4}
-
-/* ═══════════════════════════════════════════════════
-   EARNINGS
-   ═══════════════════════════════════════════════════ */
-.earnings-banner{
-  background:linear-gradient(135deg,var(--indigo-dk),var(--indigo),var(--cyan));
-  border-radius:var(--radius);padding:28px 24px;text-align:center;margin-bottom:20px;
-  box-shadow:0 10px 40px rgba(99,102,241,.25);position:relative;overflow:hidden;
-}
-.earnings-banner::before{content:'';position:absolute;top:-50%;right:-20%;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.15),transparent 70%)}
-.earnings-banner .label{font-size:.78rem;color:rgba(255,255,255,.75);font-weight:600;letter-spacing:1px;text-transform:uppercase}
-.earnings-banner .amount{font-size:3rem;font-weight:800;color:var(--white);line-height:1.1;margin:4px 0 14px;position:relative}
-
-.tx-list{display:flex;flex-direction:column;gap:8px}
-.tx-item{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:14px 16px;background:var(--dark2);border:1px solid var(--dark3);
-  border-radius:var(--radius-sm);
-}
-.tx-item .desc{font-size:.88rem;color:var(--white);font-weight:600}
-.tx-item .date{font-size:.72rem;color:var(--text-med);margin-top:2px}
-.tx-item .amount{font-weight:800;font-size:.95rem}
-.tx-item .amount.earned{color:var(--green-lt)}
-.tx-item .amount.withdrawn{color:var(--red)}
-
-/* ═══════════════════════════════════════════════════
-   SUBMISSIONS
-   ═══════════════════════════════════════════════════ */
-.submission{background:var(--dark);border:1px solid var(--dark3);border-radius:var(--radius-sm);padding:16px;margin-bottom:12px}
-.submission-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px}
-.tester-name{font-size:.9rem;font-weight:700;color:var(--white)}
-.meta{font-size:.72rem;color:var(--text-med)}
-.notes{font-size:.86rem;color:var(--text);line-height:1.55;margin-top:6px}
-.files-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
-.file-tag{padding:5px 10px;background:var(--dark2);border:1px solid var(--dark3);border-radius:4px;font-size:.72rem;color:var(--cyan)}
-
-/* ═══════════════════════════════════════════════════
-   BOTTOM SHEET (mobile-friendly modal)
-   ═══════════════════════════════════════════════════ */
-.sheet-backdrop{
-  position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;
-  animation:fadeIn .25s ease;
-}
-.sheet{
-  position:fixed;left:0;right:0;bottom:0;z-index:201;
-  background:var(--dark2);border-radius:24px 24px 0 0;
-  padding:16px calc(var(--sar) + 20px) calc(var(--sab) + 24px) calc(var(--sal) + 20px);
-  max-height:90vh;overflow-y:auto;
-  animation:sheetUp .35s var(--ease-out);
-  box-shadow:0 -10px 40px rgba(0,0,0,.5);
-}
-.sheet-handle{width:44px;height:5px;background:var(--dark4);border-radius:3px;margin:0 auto 16px}
-.sheet h3{font-size:1.2rem;font-weight:800;color:var(--white);margin-bottom:18px}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
-
-/* ═══════════════════════════════════════════════════
-   TOAST
-   ═══════════════════════════════════════════════════ */
-.toast{
-  position:fixed;top:calc(var(--sat) + 20px);left:50%;transform:translateX(-50%);
-  background:rgba(30,41,59,.96);backdrop-filter:blur(10px);
-  color:var(--white);padding:12px 20px;border-radius:24px;
-  font-size:.88rem;font-weight:600;z-index:500;
-  border:1px solid var(--dark3);box-shadow:0 10px 30px rgba(0,0,0,.5);
-  display:flex;align-items:center;gap:10px;
-  animation:toastSlide .4s var(--ease-out);
-  max-width:90vw;
-}
-.toast.success{border-color:rgba(16,185,129,.5)}
-.toast.success::before{content:'✓';color:var(--green-lt);font-size:1.1rem;font-weight:800}
-.toast.error{border-color:rgba(239,68,68,.5)}
-.toast.error::before{content:'!';color:var(--red);font-size:1.1rem;font-weight:800;width:20px;height:20px;border-radius:50%;background:rgba(239,68,68,.2);display:flex;align-items:center;justify-content:center}
-@keyframes toastSlide{from{opacity:0;transform:translate(-50%,-20px)}to{opacity:1;transform:translate(-50%,0)}}
-
-/* ═══════════════════════════════════════════════════
-   INSTALL BANNER
-   ═══════════════════════════════════════════════════ */
-.install-banner{
-  position:fixed;left:calc(var(--sal) + 16px);right:calc(var(--sar) + 16px);
-  bottom:calc(var(--bottomnav-h) + var(--sab) + 16px);
-  background:linear-gradient(135deg,var(--indigo),var(--indigo-dk));
-  border-radius:var(--radius);padding:14px 16px;
-  display:flex;align-items:center;gap:12px;
-  z-index:50;box-shadow:0 10px 30px rgba(99,102,241,.35);
-  animation:slideUpFade .5s var(--ease-out);
-}
-.install-banner .icon{font-size:1.8rem}
-.install-banner .text{flex:1}
-.install-banner .title{font-size:.88rem;font-weight:700;color:var(--white)}
-.install-banner .desc{font-size:.74rem;color:rgba(255,255,255,.75);margin-top:1px}
-.install-banner button{background:var(--white);color:var(--indigo-dk);padding:8px 14px;border-radius:20px;font-size:.78rem;font-weight:700}
-.install-banner .close{background:transparent;color:rgba(255,255,255,.7);font-size:1.4rem;padding:4px 8px;line-height:1}
-@keyframes slideUpFade{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-
-/* ═══════════════════════════════════════════════════
-   PULL TO REFRESH
-   ═══════════════════════════════════════════════════ */
-.ptr-indicator{
-  position:absolute;top:0;left:50%;transform:translateX(-50%) translateY(-50px);
-  width:40px;height:40px;border-radius:50%;
-  background:var(--dark2);border:1px solid var(--dark3);
-  display:flex;align-items:center;justify-content:center;
-  color:var(--cyan);font-size:1.1rem;
-  transition:transform .2s;z-index:3;
-  box-shadow:0 4px 12px rgba(0,0,0,.3);
-}
-.ptr-indicator.visible{transform:translateX(-50%) translateY(16px)}
-.ptr-indicator.refreshing{animation:spin 1s linear infinite}
-
-/* ═══════════════════════════════════════════════════
-   EMPTY STATE
-   ═══════════════════════════════════════════════════ */
-.empty{text-align:center;padding:50px 24px;color:var(--text-med)}
-.empty .icon{font-size:3.2rem;margin-bottom:14px;opacity:.4}
-.empty p{font-size:.92rem;margin-bottom:18px;line-height:1.5}
-
-/* ═══════════════════════════════════════════════════
-   RESPONSIVE (tablet+)
-   ═══════════════════════════════════════════════════ */
-@media(min-width:600px){
-  .main{padding:20px 40px}
-  .stats-row{grid-template-columns:repeat(4,1fr)}
-  .role-cards{flex-direction:row;max-width:640px;margin:0 auto}
-  .role-card{flex-direction:column;text-align:center}
-  .role-card .arrow{display:none}
-}
-</style>
-</head>
-<body>
-<div id="root"></div>
-<script type="text/babel">
-const { useState, useCallback, useEffect, useRef } = React;
+﻿import { useState, useCallback, useEffect, useRef } from 'react';
+import { createClient } from '@supabase/supabase-js';
 
 // ═══════════════════════════════════════════════════
 // UTILITIES
@@ -518,32 +17,14 @@ const LS = {
   },
 };
 
-const LOCAL_API = 'http://localhost:4000/api';
-const API = window.VALIDX_API || (
-  ['localhost', '127.0.0.1', ''].includes(window.location.hostname) ? LOCAL_API : '/api'
-);
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || window.VALIDX_SUPABASE_URL || '';
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || window.VALIDX_SUPABASE_ANON_KEY || '';
 let supabaseClientPromise = null;
-
-async function loadSupabaseCreateClient() {
-  if (window.supabase?.createClient) return window.supabase.createClient;
-  const mod = await import('https://esm.sh/@supabase/supabase-js@2');
-  return mod.createClient;
-}
 
 async function getSupabaseClient() {
   if (!supabaseClientPromise) {
-    supabaseClientPromise = (async () => {
-      const inlineConfig = window.VALIDX_SUPABASE_URL && window.VALIDX_SUPABASE_ANON_KEY
-        ? { enabled: true, url: window.VALIDX_SUPABASE_URL, anonKey: window.VALIDX_SUPABASE_ANON_KEY }
-        : null;
-      const cfg = inlineConfig || await fetch(API + '/config')
-        .then(res => res.json())
-        .then(data => data.supabase);
-
-      if (!cfg || !cfg.enabled) throw new Error('Supabase is not configured');
-      const createClient = await loadSupabaseCreateClient();
-      return createClient(cfg.url, cfg.anonKey);
-    })();
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) throw new Error('Supabase is not configured');
+    supabaseClientPromise = Promise.resolve(createClient(SUPABASE_URL, SUPABASE_ANON_KEY));
   }
   return supabaseClientPromise;
 }
@@ -862,7 +343,7 @@ const SEED_EXPERIMENTS = [
     ]
   },
   {
-    id: 2, title: "LoopNote App - Feature Priority", status: "active",
+    id: 2, title: "LoopNote App — Feature Priority", status: "active",
     assumption: "Students prefer voice-memo note-taking over typed notes for study groups.",
     type: "feature", budget: 250, tier: "full-study",
     createdAt: "2026-04-05", createdBy: "business",
@@ -871,14 +352,14 @@ const SEED_EXPERIMENTS = [
     ]
   },
   {
-    id: 3, title: "EcoSwap - Brand Positioning", status: "active",
+    id: 3, title: "EcoSwap — Brand Positioning", status: "active",
     assumption: "Sustainability messaging drives more signups than savings messaging for a thrift marketplace app.",
     type: "brand", budget: 89, tier: "deep-dive",
     createdAt: "2026-04-08", createdBy: "business",
     submissions: []
   },
   {
-    id: 4, title: "QuickShift - Channel Strategy", status: "completed",
+    id: 4, title: "QuickShift — Channel Strategy", status: "completed",
     assumption: "TikTok is the most effective acquisition channel for a gig-economy tutoring platform.",
     type: "channel", budget: 250, tier: "full-study",
     createdAt: "2026-03-28", createdBy: "business",
@@ -907,8 +388,8 @@ function App() {
   const [experiments, setExperiments] = useState(() => LS.get('vx_experiments', SEED_EXPERIMENTS));
   const [testerEarnings, setTesterEarnings] = useState(() => LS.get('vx_earnings', 47.50));
   const [testerTxns, setTesterTxns] = useState(() => LS.get('vx_txns', [
-    { id: 1, desc: "QuickShift - Channel Strategy", amount: 25, type: "earned", date: "2026-04-01" },
-    { id: 2, desc: "FitMeal Kits - Pricing", amount: 22.50, type: "earned", date: "2026-04-08" },
+    { id: 1, desc: "QuickShift — Channel Strategy", amount: 25, type: "earned", date: "2026-04-01" },
+    { id: 2, desc: "FitMeal Kits — Pricing", amount: 22.50, type: "earned", date: "2026-04-08" },
   ]));
   const [claimedIds, setClaimedIds] = useState(() => LS.get('vx_claimed', [1]));
   const [toast, setToast] = useState(null);
@@ -1040,7 +521,7 @@ function App() {
             <div className="desc">Add to home screen for quick access</div>
           </div>
           <button onClick={handleInstall}>Install</button>
-          <button className="close" onClick={dismissInstall}>x</button>
+          <button className="close" onClick={dismissInstall}>×</button>
         </div>
       )}
     </>
@@ -1066,7 +547,7 @@ function Splash() {
 function Onboarding({ onDone }) {
   const [step, setStep] = useState(0);
   const slides = [
-    { emoji: "🎯", title: "Test Before You Build", desc: "Validate your riskiest business assumptions in days - not months. No more guessing." },
+    { emoji: "🎯", title: "Test Before You Build", desc: "Validate your riskiest business assumptions in days — not months. No more guessing." },
     { emoji: "🌐", title: "Real Market Data", desc: "Tap into a live network of college student testers who represent the next generation of consumers." },
     { emoji: "💰", title: "Pay Per Test", desc: "Starting at just $29. No subscriptions, no contracts. Get actionable insights fast." },
   ];
@@ -1107,7 +588,7 @@ function RoleSelect({ onSelect }) {
               <h2>I'm a Business</h2>
               <p>Create experiments and get real data from next-gen consumers</p>
             </div>
-            <div className="arrow">&gt;</div>
+            <div className="arrow">›</div>
           </div>
           <div className="role-card" onClick={() => onSelect('tester')}>
             <div className="emoji">🎓</div>
@@ -1115,7 +596,7 @@ function RoleSelect({ onSelect }) {
               <h2>I'm a Tester</h2>
               <p>Browse experiments, provide feedback, and earn money</p>
             </div>
-            <div className="arrow">&gt;</div>
+            <div className="arrow">›</div>
           </div>
         </div>
       </div>
@@ -1223,7 +704,7 @@ function LoginScreen({ role, onSuccess, onSwitchToRegister, onBack }) {
     // Try to load saved profile matching this email
     const saved = LS.get('vx_accounts', []);
     const match = saved.find(a => a.email === email && a.role === role);
-    if (!match) { setErr("No account found for that email - try signing up"); return; }
+    if (!match) { setErr("No account found for that email — try signing up"); return; }
     onSuccess(match);
   };
 
@@ -1756,7 +1237,7 @@ function CreateExperiment({ onSubmit, onCancel }) {
           </div>
         </div>
         <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={!title.trim() || !assumption.trim()}>
-          Checkout with {payMethod === 'stripe' ? 'Stripe' : 'PayPal'} - ${info.price}
+          Checkout with {payMethod === 'stripe' ? 'Stripe' : 'PayPal'} — ${info.price}
         </button>
       </form>
     </div>
@@ -1854,7 +1335,7 @@ function TesterApp({ profile, experiments, setExperiments, earnings, setEarnings
       <div className="topbar">
         <div className="logo">Valid<span>X</span></div>
         <div className="topbar-right">
-          <span className="topbar-role tester">{profile?.firstName ? `${profile.firstName} - Tester` : 'Tester'}</span>
+          <span className="topbar-role tester">{profile?.firstName ? `${profile.firstName} · Tester` : 'Tester'}</span>
           <button className="topbar-btn" onClick={onLogout}>Log out</button>
         </div>
       </div>
@@ -2008,7 +1489,7 @@ function UploadData({ experiment, onSubmit, onCancel }) {
       </div>
       <div className="form-group">
         <label>Your Findings</label>
-        <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Describe what you did, who you talked to, and what you found. Be specific - include numbers and quotes." rows={6} />
+        <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Describe what you did, who you talked to, and what you found. Be specific — include numbers and quotes." rows={6} />
         <div className="hint">The more detailed, the more valuable your submission.</div>
       </div>
       <div className="form-group">
@@ -2027,7 +1508,7 @@ function UploadData({ experiment, onSubmit, onCancel }) {
                   <div className="name">{f.name}</div>
                   <div className="size">{(f.size / 1024).toFixed(1)} KB</div>
                 </div>
-                <button className="remove" onClick={() => removeFile(i)}>x</button>
+                <button className="remove" onClick={() => removeFile(i)}>×</button>
               </div>
             ))}
           </div>
@@ -2092,42 +1573,5 @@ function CashoutSheet({ balance, onCashout, onClose }) {
 }
 
 // ═══════════════════════════════════════════════════
-// MOUNT
-// ═══════════════════════════════════════════════════
-ReactDOM.render(<App />, document.getElementById('root'));
+export default App;
 
-// Service worker registration (same strategy as index.html)
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').then(reg => {
-      reg.update().catch(() => {});
-      if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-      reg.addEventListener('updatefound', () => {
-        const nw = reg.installing;
-        if (nw) nw.addEventListener('statechange', () => {
-          if (nw.state === 'installed' && navigator.serviceWorker.controller) {
-            nw.postMessage({ type: 'SKIP_WAITING' });
-          }
-        });
-      });
-    }).catch(() => {});
-  });
-}
-
-// Handle PWA shortcut deep links (?action=create, ?view=browse, ?view=earnings)
-try {
-  const params = new URLSearchParams(location.search);
-  const action = params.get('action');
-  const view = params.get('view');
-  if (action === 'create') sessionStorage.setItem('vx_deeplink_action', 'create');
-  if (view) sessionStorage.setItem('vx_deeplink_view', view);
-} catch {}
-
-// Prevent pull-to-refresh on the whole body (only inside main scroll)
-document.body.addEventListener('touchmove', (e) => {
-  if (e.target.closest('.main') || e.target.closest('.sheet') || e.target.closest('.onboarding')) return;
-  e.preventDefault();
-}, { passive: false });
-</script>
-</body>
-</html>

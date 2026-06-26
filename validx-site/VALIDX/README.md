@@ -1,107 +1,101 @@
-# ValidX — Marketing Site + PWA
+# ValidX UI
 
-The Uber-style marketplace that connects startups and small businesses to real testers. Launch micro-experiments, get market signals in days.
+Vite + React app for the ValidX marketing site and PWA.
 
-## What's in here
+## Structure
 
+```txt
+validx-site/VALIDX/
+  index.html              Marketing homepage
+  app.html                Vite entry for the PWA
+  src/
+    App.jsx               Current app shell and screens
+    main.jsx              React mount, service worker, browser hooks
+    styles/app.css        Extracted PWA styles
+  public/
+    manifest.json
+    sw.js
+    offline.html
+    icons/
+  supabase/               Schema lives at repo root: ../../supabase
+  vercel.json
+  vite.config.js
 ```
-validx-site/
-├── index.html        Marketing homepage (hero, pricing, CTA)
-├── app.html          The full PWA — business + tester flows
-├── offline.html      Offline fallback page served by the SW
-├── manifest.json     PWA manifest (icons, shortcuts, theme)
-├── sw.js             Service worker (network-first pages, cache-first assets)
-├── robots.txt        Crawler rules
-├── sitemap.xml       Sitemap for indexing
-├── netlify.toml      Netlify deployment config
-├── vercel.json       Vercel deployment config
-└── icons/
-    ├── favicon.ico
-    ├── favicon-16.png, favicon-32.png
-    ├── apple-touch-icon.png      180x180
-    ├── icon-192.png, icon-256.png, icon-384.png, icon-512.png
-    └── icon-maskable-512.png     Android adaptive icon
+
+## Local Development
+
+Create `validx-site/VALIDX/.env.local`:
+
+```txt
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key
 ```
 
-There is no build step. Everything is plain HTML/CSS/JS — the app uses React + Babel loaded from a CDN and compiles JSX in the browser.
-
-## Local development
-
-Because service workers and the manifest require a real HTTP origin (not `file://`), serve the folder over HTTP:
+Then run:
 
 ```sh
-# Option 1 — Python (no install)
-cd validx-site
-python3 -m http.server 8080
-
-# Option 2 — Node
-npx serve -p 8080
-
-# Then open http://localhost:8080
+cd validx-site/VALIDX
+npm install
+npm run dev
 ```
 
-Then visit:
+Open:
 
-- http://localhost:8080/            — marketing site
-- http://localhost:8080/app.html    — the PWA
+- `http://localhost:5173/` for the marketing page
+- `http://localhost:5173/app.html` for the app
 
-## Deploying
+## Supabase
 
-### Netlify (easiest)
-1. Drag-and-drop the `validx-site` folder to https://app.netlify.com/drop
-2. Or connect a Git repo — `netlify.toml` is already configured.
+Before using auth-backed app flows, run the SQL migration in:
 
-### Vercel
-1. Run `vercel` from inside the folder, or
-2. Import the repo on vercel.com — `vercel.json` is already configured.
+```txt
+../../supabase/migrations/20260625_validx_core.sql
+```
 
-### GitHub Pages
-1. Push the folder to a repo.
-2. Settings → Pages → deploy from branch → `main` / root.
-3. Note: the service worker scope needs to be at the root of the repo, so either use a user/org page (`username.github.io`) or put the files at the root of the repo.
+That creates the core Postgres tables and RLS policies.
 
-### Cloudflare Pages
-1. Connect the repo, set the build output directory to `.`, no build command needed.
+## Vercel
 
-## Hooking up a custom domain (validx.com)
+For Git deployments from the full repo, use these project settings:
 
-1. Buy `validx.com` from any registrar (Namecheap, Cloudflare, Porkbun, etc.).
-2. In your host's dashboard (Netlify/Vercel/etc.) add the custom domain.
-3. Update DNS to the host's CNAME/A records (your provider will walk you through this).
-4. HTTPS is automatic on all the hosts above.
+```txt
+Framework Preset: Vite
+Root Directory: validx-site/VALIDX
+Install Command: npm install
+Build Command: npm run build
+Output Directory: dist
+```
 
-Then update the absolute URLs in:
-- `sitemap.xml` (currently `https://validx.com/...`)
-- `robots.txt` (sitemap link)
-- The `og:url` meta in `index.html`
+For CLI deployments, either run `vercel` from the repository root while keeping the
+Root Directory above, or run `vercel` from this `validx-site/VALIDX` directory after
+clearing Root Directory in Vercel Project Settings.
 
-## PWA install flow
+Environment variables:
 
-Once deployed over HTTPS:
+```txt
+VITE_SUPABASE_URL
+VITE_SUPABASE_ANON_KEY
+```
 
-- **iOS Safari**: Share → "Add to Home Screen"
-- **Android Chrome**: The install banner appears automatically. Users can also use ⋮ → "Install app"
-- **Desktop Chrome/Edge**: An install icon appears in the address bar
+Do not add `SUPABASE_SERVICE_ROLE_KEY` to the UI project. Keep that for Supabase Edge Functions or other server-only code.
 
-The manifest ships with three shortcuts (Create Experiment, Browse, Earnings) that appear when you long-press the installed icon on Android.
+## Useful Commands
 
-## Next steps for launch
+```sh
+npm run dev
+npm run build
+npm run preview
+```
 
-- [ ] **Wire up real payments** — Stripe Checkout for business payments, PayPal Payouts API for tester cashouts. The UI is already in place in `app.html`.
-- [ ] **Add a backend** — right now all state lives in `localStorage`. For real users you'll want Supabase or Firebase (auth + a Postgres/Firestore DB + storage for uploaded files).
-- [ ] **Auth** — add magic-link / Google / Apple sign-in so users can sync across devices.
-- [ ] **Analytics** — add Plausible or GA4 to `index.html` to track conversion.
-- [ ] **Transactional email** — Resend or Postmark for experiment notifications and payout confirmations.
-- [ ] **Legal pages** — Terms of Service, Privacy Policy (required before accepting payments and for App Store / Play Store submission).
 
-## Tech stack
+```sh
+cd C:\Users\danie\CodeProjects\ValidX
+```
 
-- HTML5 + CSS (custom, no framework) for the marketing site
-- React 18 via CDN + in-browser Babel for the app (single-file, no build)
-- Service worker with a network-first strategy for pages and cache-first for assets
-- LocalStorage for client-side persistence
-- Web Manifest with shortcuts, maskable icon, and portrait lock
+```sh
+$env:Path = "C:\Program Files\nodejs;$env:Path"
+```
 
-## License
-
-© 2026 ValidX. All rights reserved.
+```sh
+& "$env:APPDATA\npm\vercel.cmd" deploy --prod
+```

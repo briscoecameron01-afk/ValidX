@@ -1,0 +1,10 @@
+.env
+**/.env
+**/.env.*
+validx-backend/
+outputs/
+audit.jsonl
+*.docx
+*.pptx
+*.log
+node_modules/
